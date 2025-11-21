@@ -19,7 +19,7 @@
 ; General Settings
 Name "${APP_NAME} ${APP_VERSION}"
 ; Note: Output path assumes makensis is run from repository root
-OutFile ".\build\bin\MrRSS-${APP_VERSION}-windows-amd64-installer.exe"
+OutFile "build\bin\MrRSS-${APP_VERSION}-windows-amd64-installer.exe"
 InstallDir "$PROGRAMFILES64\${APP_NAME}"
 InstallDirRegKey HKLM "Software\${APP_NAME}" "Install_Dir"
 RequestExecutionLevel admin
@@ -38,7 +38,7 @@ RequestExecutionLevel admin
 
 ; License page
 ; Note: LICENSE file must be in repository root when running makensis
-!insertmacro MUI_PAGE_LICENSE ".\LICENSE"
+!insertmacro MUI_PAGE_LICENSE "LICENSE"
 
 ; Directory page
 !insertmacro MUI_PAGE_DIRECTORY
@@ -73,7 +73,7 @@ Section "MainSection" SEC01
     
     ; Copy the executable
     ; Note: Assumes makensis is run from repository root
-    File ".\build\bin\${APP_EXE}"
+    File "build\bin\${APP_EXE}"
     
     ; Create shortcuts
     CreateDirectory "$SMPROGRAMS\${APP_NAME}"
