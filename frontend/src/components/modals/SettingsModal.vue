@@ -61,6 +61,10 @@ async function saveSettings() {
     }
 }
 
+function showAddFeedModal() {
+    window.dispatchEvent(new CustomEvent('show-add-feed'));
+}
+
 function importOPML(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -202,7 +206,10 @@ async function cleanupDatabase() {
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div class="bg-bg-primary w-full max-w-4xl h-[700px] flex flex-col rounded-2xl shadow-2xl border border-border overflow-hidden animate-fade-in">
             <div class="p-5 border-b border-border flex justify-between items-center shrink-0">
-                <h3 class="text-lg font-semibold m-0">{{ store.i18n.t('settingsTitle') }}</h3>
+                <h3 class="text-lg font-semibold m-0 flex items-center gap-2">
+                    <i class="ph ph-gear text-xl"></i>
+                    {{ store.i18n.t('settingsTitle') }}
+                </h3>
                 <span @click="emit('close')" class="text-2xl cursor-pointer text-text-secondary hover:text-text-primary">&times;</span>
             </div>
             
@@ -323,7 +330,10 @@ async function cleanupDatabase() {
 
                 <div v-if="activeTab === 'feeds'" class="space-y-6">
                     <div class="setting-group">
-                        <label class="block font-semibold mb-3 text-text-secondary uppercase text-xs tracking-wider">{{ store.i18n.t('dataManagement') }}</label>
+                        <label class="block font-semibold mb-3 text-text-secondary uppercase text-xs tracking-wider flex items-center gap-2">
+                            <i class="ph ph-hard-drives text-base"></i>
+                            {{ store.i18n.t('dataManagement') }}
+                        </label>
                         <div class="flex gap-3 mb-3">
                             <button @click="$refs.opmlInput.click()" class="btn-secondary flex-1 justify-center">
                                 <i class="ph ph-upload"></i> {{ store.i18n.t('importOPML') }}
@@ -344,10 +354,13 @@ async function cleanupDatabase() {
                     </div>
                     
                     <div class="setting-group">
-                        <label class="block font-semibold mb-3 text-text-secondary uppercase text-xs tracking-wider">{{ store.i18n.t('manageFeeds') }}</label>
+                        <label class="block font-semibold mb-3 text-text-secondary uppercase text-xs tracking-wider flex items-center gap-2">
+                            <i class="ph ph-rss text-base"></i>
+                            {{ store.i18n.t('manageFeeds') }}
+                        </label>
                         
                         <div class="flex flex-wrap gap-2 mb-2">
-                            <button @click="window.dispatchEvent(new CustomEvent('show-add-feed'))" class="btn-secondary text-sm py-1.5 px-3">
+                            <button @click="showAddFeedModal" class="btn-secondary text-sm py-1.5 px-3">
                                 <i class="ph ph-plus"></i> {{ store.i18n.t('addFeed') }}
                             </button>
                             <button @click="batchDelete" class="btn-danger text-sm py-1.5 px-3" :disabled="selectedFeeds.length === 0">
@@ -393,7 +406,7 @@ async function cleanupDatabase() {
                 </div>
             </div>
 
-            <div class="p-5 border-t border-border bg-bg-secondary text-right shrink-0">
+            <div class="p-3 border-t border-border bg-bg-secondary text-right shrink-0">
                 <button @click="saveSettings" class="btn-primary">{{ store.i18n.t('saveSettings') }}</button>
             </div>
         </div>

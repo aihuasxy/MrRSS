@@ -174,10 +174,17 @@ async function refreshArticles() {
             <div class="flex items-center justify-between mb-3">
                 <h3 class="m-0 text-lg font-semibold">{{ store.i18n.t('articles') }}</h3>
                 <div class="flex items-center gap-2">
-                    <button @click="refreshArticles" class="text-text-secondary hover:text-text-primary hover:bg-bg-tertiary p-1.5 rounded transition-colors relative" :title="store.i18n.t('refresh')">
-                        <i :class="['ph ph-arrow-clockwise text-xl', store.refreshProgress.isRunning ? 'ph-spin' : '']"></i>
-                        <div v-if="store.refreshProgress.isRunning" class="absolute bottom-0 left-0 h-0.5 bg-accent transition-all" :style="{ width: (store.refreshProgress.current / store.refreshProgress.total * 100) + '%' }"></div>
-                    </button>
+                    <div class="relative">
+                        <button @click="refreshArticles" class="text-text-secondary hover:text-text-primary hover:bg-bg-tertiary p-1.5 rounded transition-colors" :title="store.i18n.t('refresh')">
+                            <i :class="['ph ph-arrow-clockwise text-xl', store.refreshProgress.isRunning ? 'ph-spin' : '']"></i>
+                        </button>
+                        <div v-if="store.refreshProgress.isRunning" class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-bg-tertiary rounded-full overflow-hidden">
+                            <div class="h-full bg-accent rounded-full transition-all duration-300" :style="{ width: (store.refreshProgress.current / store.refreshProgress.total * 100) + '%' }"></div>
+                        </div>
+                        <div v-if="store.refreshProgress.isRunning" class="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                            {{ store.refreshProgress.current }}
+                        </div>
+                    </div>
                     <button @click="emit('toggleSidebar')" class="md:hidden text-2xl p-1">
                         <i class="ph ph-list"></i>
                     </button>
