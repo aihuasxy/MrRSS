@@ -85,6 +85,10 @@ if [ -f "imgs/logo.svg" ]; then
     else
         echo "Warning: Neither inkscape nor ImageMagick found. Icon conversion skipped."
     fi
+elif [ -f "build/appicon.png" ]; then
+    echo "Using existing PNG icon..."
+    cp "build/appicon.png" "${APPDIR}/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
+    cp "build/appicon.png" "${APPDIR}/${APP_NAME}.png"
 fi
 
 # Copy desktop file to root
