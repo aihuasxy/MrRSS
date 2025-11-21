@@ -1,15 +1,28 @@
 #!/bin/bash
 # Script to create a Linux AppImage for MrRSS
+#
+# Application Information:
+# Name: MrRSS
+# Description: A Modern, Cross-Platform Desktop RSS Reader
+# Publisher: MrRSS Team
+# URL: https://github.com/WCY-dt/MrRSS
+# Copyright: Copyright © MrRSS Team
 
 set -e
 
 APP_NAME="MrRSS"
 VERSION="1.1.0"
+APP_PUBLISHER="MrRSS Team"
+APP_URL="https://github.com/WCY-dt/MrRSS"
+APP_DESCRIPTION="A Modern, Cross-Platform Desktop RSS Reader"
 BUILD_DIR="build/bin"
 APPDIR="build/appimage/${APP_NAME}.AppDir"
 APPIMAGE_NAME="${APP_NAME}-${VERSION}-linux-amd64.AppImage"
 
 echo "Creating AppImage for ${APP_NAME} ${VERSION}..."
+echo "Publisher: ${APP_PUBLISHER}"
+echo "Description: ${APP_DESCRIPTION}"
+echo ""
 
 # Check if binary exists
 if [ ! -f "${BUILD_DIR}/${APP_NAME}" ]; then
@@ -36,12 +49,15 @@ cat > "${APPDIR}/usr/share/applications/${APP_NAME}.desktop" << EOF
 [Desktop Entry]
 Type=Application
 Name=${APP_NAME}
-Comment=A Modern, Cross-Platform Desktop RSS Reader
+GenericName=RSS Reader
+Comment=${APP_DESCRIPTION}
 Exec=${APP_NAME}
 Icon=${APP_NAME}
-Categories=Network;News;
+Categories=Network;News;Feed;
 Terminal=false
 StartupWMClass=${APP_NAME}
+Keywords=RSS;Atom;Feed;News;Reader;
+X-GNOME-UsesNotifications=true
 EOF
 
 # Create AppRun script

@@ -1,16 +1,29 @@
 #!/bin/bash
 # Script to create a macOS DMG installer for MrRSS
+# 
+# Application Information:
+# Name: MrRSS
+# Description: A Modern, Cross-Platform Desktop RSS Reader
+# Publisher: MrRSS Team
+# URL: https://github.com/WCY-dt/MrRSS
+# Copyright: Copyright © MrRSS Team
 
 set -e
 
 APP_NAME="MrRSS"
 VERSION="1.1.0"
+APP_PUBLISHER="MrRSS Team"
+APP_URL="https://github.com/WCY-dt/MrRSS"
+APP_DESCRIPTION="A Modern, Cross-Platform Desktop RSS Reader"
 BUILD_DIR="build/bin"
 DMG_DIR="build/dmg"
 APP_PATH="${BUILD_DIR}/${APP_NAME}.app"
 DMG_NAME="${APP_NAME}-${VERSION}-darwin-universal.dmg"
 
 echo "Creating DMG for ${APP_NAME} ${VERSION}..."
+echo "Publisher: ${APP_PUBLISHER}"
+echo "Description: ${APP_DESCRIPTION}"
+echo ""
 
 # Check if app exists
 if [ ! -d "${APP_PATH}" ]; then

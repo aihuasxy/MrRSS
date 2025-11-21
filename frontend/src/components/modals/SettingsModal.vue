@@ -442,7 +442,7 @@ async function checkForUpdates() {
                     <p class="text-text-secondary">{{ store.i18n.t('aboutApp') }}</p>
                     <p class="text-text-secondary text-sm mt-2">{{ store.i18n.t('version') }} {{ appVersion }}</p>
                     
-                    <div class="mt-6 mb-6">
+                    <div class="mt-6 mb-6 flex justify-center">
                         <button @click="checkForUpdates" :disabled="checkingUpdates" class="btn-secondary justify-center">
                             <i class="ph ph-arrows-clockwise" :class="{'animate-spin': checkingUpdates}"></i>
                             {{ checkingUpdates ? store.i18n.t('checking') : store.i18n.t('checkForUpdates') }}

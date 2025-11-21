@@ -20,8 +20,12 @@ RequestExecutionLevel admin
 
 ; MUI Settings
 !define MUI_ABORTWARNING
-!define MUI_ICON "build\windows\icon.ico"
-!define MUI_UNICON "build\windows\icon.ico"
+; Note: Using default NSIS icons for compatibility
+; To use custom icons, ensure icon.ico is in build/windows/ and uncomment:
+; !define MUI_ICON "build\windows\icon.ico"
+; !define MUI_UNICON "build\windows\icon.ico"
+!define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\modern-install.ico"
+!define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 
 ; Welcome page
 !insertmacro MUI_PAGE_WELCOME
