@@ -487,19 +487,12 @@ func (h *Handler) HandleCheckUpdates(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		} else if platform == "darwin" {
-			// For macOS, try exact arch match first (amd64/arm64), then universal
+			// For macOS, match exact arch (amd64/arm64)
 			if strings.Contains(name, platformArch) && strings.HasSuffix(name, ".dmg") {
 				downloadURL = asset.BrowserDownloadURL
 				assetName = asset.Name
 				assetSize = asset.Size
 				break
-			}
-			// Fallback to universal build for darwin
-			if strings.Contains(name, "darwin-universal") && strings.HasSuffix(name, ".dmg") {
-				downloadURL = asset.BrowserDownloadURL
-				assetName = asset.Name
-				assetSize = asset.Size
-				// Don't break, continue looking for exact match
 			}
 		}
 	}

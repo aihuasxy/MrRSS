@@ -157,10 +157,6 @@ jobs:
             platform: darwin
             arch: arm64
             ext: '.app'
-          - os: macos-latest
-            platform: darwin
-            arch: universal
-            ext: '.app'
     
     steps:
       - uses: actions/checkout@v6

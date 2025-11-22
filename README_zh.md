@@ -49,7 +49,6 @@
 
 - **Apple Silicon (M1/M2/M3)**: 下载 `MrRSS-{version}-darwin-arm64.dmg`
 - **Intel**: 下载 `MrRSS-{version}-darwin-amd64.dmg`
-- **通用版（推荐）**: 下载 `MrRSS-{version}-darwin-universal.dmg` (两种芯片都支持)
 - 打开 DMG 文件
 - 将 MrRSS.app 拖入应用程序文件夹
 - 从应用程序中启动 MrRSS

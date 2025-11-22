@@ -49,7 +49,6 @@ Download the latest installer for your platform from the [Releases](https://gith
 
 - **Apple Silicon (M1/M2/M3)**: Download `MrRSS-{version}-darwin-arm64.dmg`
 - **Intel**: Download `MrRSS-{version}-darwin-amd64.dmg`
-- **Universal (recommended)**: Download `MrRSS-{version}-darwin-universal.dmg` (works on both)
 - Open the DMG file
 - Drag MrRSS.app to your Applications folder
 - Launch MrRSS from Applications
