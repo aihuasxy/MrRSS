@@ -9,30 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Content rendering toggle: Switch between viewing the original webpage and RSS content within the app
-  - Toggle button in article detail view to switch between original webpage and rendered RSS content
-  - Right-click menu option on articles to trigger content rendering
-  - Styled RSS content display with proper typography and formatting
-- Article hiding functionality:
-  - Right-click menu option to hide/unhide articles
-  - Hidden articles are excluded from the article list by default
-  - Settings toggle to show/hide hidden articles
-  - Visual indicator (eye-slash icon and dimmed styling) for hidden articles when shown
-- Last article update time display in settings:
-  - Shows when articles were last refreshed with relative time formatting (e.g., "2 hours ago")
-  - Automatically updated after each refresh
-- Translation clearing on settings change:
-  - Automatically clears all translations when translation is enabled/disabled
-  - Automatically clears all translations when target language is changed
-  - Re-translates visible articles after clearing when translation is enabled
+- Switch between viewing the original webpage and RSS content within the app
+- Article hiding functionality
+- Last article update time display in settings
 
 ### Changed
 
-- Improved UI text and image selection prevention:
-  - All UI elements now prevent text selection by default
-  - Images cannot be dragged
-  - Input fields and textareas remain selectable for user interaction
-- Settings auto-save now triggers article list refresh when "show hidden articles" toggle is changed
+- Improved UI text and image selection prevention
 
 ### Fixed
 
