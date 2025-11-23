@@ -160,15 +160,16 @@ function formatLastUpdate(timestamp) {
                 </div>
                 <input type="number" v-model="settings.update_interval" min="1" class="input-field w-20 text-center">
             </div>
-            <div class="setting-item mt-3">
-                <div class="flex-1 flex items-start gap-3">
-                    <i class="ph ph-calendar-check text-xl text-text-secondary mt-0.5"></i>
+            
+            <!-- Last update time - read-only info display -->
+            <div class="info-display mt-3">
+                <div class="flex items-center gap-2">
+                    <i class="ph ph-calendar-check text-lg text-text-secondary"></i>
                     <div class="flex-1">
-                        <div class="font-medium mb-1">{{ store.i18n.t('lastArticleUpdate') }}</div>
-                        <div class="text-xs text-text-secondary">{{ store.i18n.t('lastArticleUpdateDesc') }}</div>
+                        <div class="text-sm text-text-secondary">{{ store.i18n.t('lastArticleUpdate') }}</div>
                     </div>
+                    <div class="text-sm font-medium text-accent">{{ formatLastUpdate(settings.last_article_update) }}</div>
                 </div>
-                <div class="text-sm font-medium text-accent">{{ formatLastUpdate(settings.last_article_update) }}</div>
             </div>
         </div>
 
@@ -191,9 +192,9 @@ function formatLastUpdate(timestamp) {
             <div v-if="settings.auto_cleanup_enabled" class="ml-4 mt-3 space-y-3 border-l-2 border-border pl-4">
                 <div class="sub-setting-item">
                     <div class="flex-1 flex items-start gap-3">
-                        <i class="ph ph-hard-drive text-lg text-text-secondary mt-0.5"></i>
+                        <i class="ph ph-hard-drive text-xl text-text-secondary mt-0.5"></i>
                         <div class="flex-1">
-                            <div class="text-sm font-medium mb-1">{{ store.i18n.t('maxCacheSize') }}</div>
+                            <div class="font-medium mb-1">{{ store.i18n.t('maxCacheSize') }}</div>
                             <div class="text-xs text-text-secondary">{{ store.i18n.t('maxCacheSizeDesc') }}</div>
                         </div>
                     </div>
@@ -205,9 +206,9 @@ function formatLastUpdate(timestamp) {
                 
                 <div class="sub-setting-item">
                     <div class="flex-1 flex items-start gap-3">
-                        <i class="ph ph-calendar-x text-lg text-text-secondary mt-0.5"></i>
+                        <i class="ph ph-calendar-x text-xl text-text-secondary mt-0.5"></i>
                         <div class="flex-1">
-                            <div class="text-sm font-medium mb-1">{{ store.i18n.t('maxArticleAge') }}</div>
+                            <div class="font-medium mb-1">{{ store.i18n.t('maxArticleAge') }}</div>
                             <div class="text-xs text-text-secondary">{{ store.i18n.t('maxArticleAgeDesc') }}</div>
                         </div>
                     </div>
@@ -248,19 +249,39 @@ function formatLastUpdate(timestamp) {
             
             <div v-if="settings.translation_enabled" class="ml-4 space-y-3 border-l-2 border-border pl-4">
                 <div class="sub-setting-item">
-                    <label class="text-sm font-medium mb-1 block">{{ store.i18n.t('translationProvider') }}</label>
-                    <select v-model="settings.translation_provider" class="input-field w-full">
+                    <div class="flex-1 flex items-start gap-3">
+                        <i class="ph ph-package text-xl text-text-secondary mt-0.5"></i>
+                        <div class="flex-1">
+                            <div class="font-medium mb-1">{{ store.i18n.t('translationProvider') }}</div>
+                            <div class="text-xs text-text-secondary">{{ store.i18n.t('translationProviderDesc') || 'Choose the translation service to use' }}</div>
+                        </div>
+                    </div>
+                    <select v-model="settings.translation_provider" class="input-field w-48">
                         <option value="google">Google Translate (Free)</option>
                         <option value="deepl">DeepL API</option>
                     </select>
                 </div>
+                
                 <div v-if="settings.translation_provider === 'deepl'" class="sub-setting-item">
-                    <label class="text-sm font-medium mb-1 block">{{ store.i18n.t('deeplApiKey') }}</label>
-                    <input type="password" v-model="settings.deepl_api_key" :placeholder="store.i18n.t('deeplApiKeyPlaceholder')" class="input-field w-full">
+                    <div class="flex-1 flex items-start gap-3">
+                        <i class="ph ph-key text-xl text-text-secondary mt-0.5"></i>
+                        <div class="flex-1">
+                            <div class="font-medium mb-1">{{ store.i18n.t('deeplApiKey') }}</div>
+                            <div class="text-xs text-text-secondary">{{ store.i18n.t('deeplApiKeyDesc') || 'Enter your DeepL API key' }}</div>
+                        </div>
+                    </div>
+                    <input type="password" v-model="settings.deepl_api_key" :placeholder="store.i18n.t('deeplApiKeyPlaceholder')" class="input-field w-48">
                 </div>
+                
                 <div class="sub-setting-item">
-                    <label class="text-sm font-medium mb-1 block">{{ store.i18n.t('targetLanguage') }}</label>
-                    <select v-model="settings.target_language" class="input-field w-full">
+                    <div class="flex-1 flex items-start gap-3">
+                        <i class="ph ph-globe text-xl text-text-secondary mt-0.5"></i>
+                        <div class="flex-1">
+                            <div class="font-medium mb-1">{{ store.i18n.t('targetLanguage') }}</div>
+                            <div class="text-xs text-text-secondary">{{ store.i18n.t('targetLanguageDesc') || 'Language to translate article titles to' }}</div>
+                        </div>
+                    </div>
+                    <select v-model="settings.target_language" class="input-field w-48">
                         <option value="en">{{ store.i18n.t('english') }}</option>
                         <option value="es">{{ store.i18n.t('spanish') }}</option>
                         <option value="fr">{{ store.i18n.t('french') }}</option>
@@ -292,6 +313,13 @@ function formatLastUpdate(timestamp) {
     @apply flex items-start justify-between gap-4 p-3 rounded-lg bg-bg-secondary border border-border;
 }
 .sub-setting-item {
-    @apply p-2.5 rounded-md bg-bg-tertiary;
+    @apply flex items-start justify-between gap-4 p-2.5 rounded-md bg-bg-tertiary;
+}
+.info-display {
+    @apply px-3 py-2 rounded-lg border border-border;
+    background-color: rgba(233, 236, 239, 0.3);
+}
+.dark-mode .info-display {
+    background-color: rgba(45, 45, 45, 0.3);
 }
 </style>
