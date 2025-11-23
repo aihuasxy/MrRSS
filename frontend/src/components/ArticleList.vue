@@ -190,7 +190,7 @@ async function refreshArticles() {
                 <div class="flex items-center gap-2">
                     <div class="relative">
                         <button @click="refreshArticles" class="text-text-secondary hover:text-text-primary hover:bg-bg-tertiary p-1.5 rounded transition-colors" :title="store.i18n.t('refresh')">
-                            <i :class="['ph ph-arrow-clockwise text-xl transition-transform', store.refreshProgress.isRunning ? 'animate-spin' : '']"></i>
+                            <i :class="['ph ph-arrow-clockwise text-xl', store.refreshProgress.isRunning ? 'ph-spin' : '']"></i>
                         </button>
                         <div v-if="store.refreshProgress.isRunning && store.refreshProgress.total > store.refreshProgress.current" class="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
                             {{ store.refreshProgress.total - store.refreshProgress.current }}

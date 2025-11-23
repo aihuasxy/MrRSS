@@ -1,6 +1,6 @@
 <script setup>
 import { store } from '../../../store.js';
-import { watch, onUnmounted, ref } from 'vue';
+import { watch, onUnmounted, onMounted, ref } from 'vue';
 
 const props = defineProps({
     settings: { type: Object, required: true }
@@ -8,16 +8,34 @@ const props = defineProps({
 
 // Debounce timer to prevent excessive API calls
 let saveTimeout = null;
+let isInitialLoad = true;
 
-// Track previous translation settings
+// Track previous translation settings - will be initialized after first load
 const prevTranslationSettings = ref({
-    enabled: props.settings.translation_enabled,
-    targetLang: props.settings.target_language
+    enabled: false,
+    targetLang: 'zh'
+});
+
+// Initialize translation tracking after component mounts
+onMounted(() => {
+    // Initialize with current settings after a short delay to avoid triggering on mount
+    setTimeout(() => {
+        prevTranslationSettings.value = {
+            enabled: props.settings.translation_enabled,
+            targetLang: props.settings.target_language
+        };
+        isInitialLoad = false;
+    }, 100);
 });
 
 // Auto-save function that saves settings immediately
 async function autoSave() {
     try {
+        // Skip translation clearing on initial load
+        if (isInitialLoad) {
+            return;
+        }
+        
         // Check if translation settings changed
         const translationChanged = 
             prevTranslationSettings.value.enabled !== props.settings.translation_enabled ||
