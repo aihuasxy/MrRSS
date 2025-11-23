@@ -18,9 +18,11 @@ type Article struct {
 	Title           string    `json:"title"`
 	URL             string    `json:"url"`
 	ImageURL        string    `json:"image_url"`
+	Content         string    `json:"content"`
 	PublishedAt     time.Time `json:"published_at"`
 	IsRead          bool      `json:"is_read"`
 	IsFavorite      bool      `json:"is_favorite"`
+	IsHidden        bool      `json:"is_hidden"`
 	FeedTitle       string    `json:"feed_title,omitempty"` // Joined field
 	TranslatedTitle string    `json:"translated_title"`
 }

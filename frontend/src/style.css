@@ -28,22 +28,29 @@ body {
     @apply bg-bg-primary text-text-primary font-sans overflow-hidden h-screen;
 }
 
-/* Disable selection and dragging for UI elements */
-button, .nav-item, .category-header, .feed-item, .article-card, .action-btn, .footer-btn, .tab-btn {
-    -ms-user-select: none;
-    user-select: none;
+/* Disable selection and dragging for UI elements and images */
+* {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    user-select: none;
 }
 
-/* Allow selection for input fields, textareas */
-input, textarea {
-    -ms-user-select: text;
-    user-select: text;
+img {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    pointer-events: none;
+}
+
+/* Allow selection for input fields, textareas, and content that should be selectable */
+input, textarea, [contenteditable="true"] {
     -webkit-user-select: text;
     -moz-user-select: text;
     -ms-user-select: text;
+    user-select: text;
 }
 
 /* Custom Scrollbar */

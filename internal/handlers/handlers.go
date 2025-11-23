@@ -165,7 +165,11 @@ func (h *Handler) HandleArticles(w http.ResponseWriter, r *http.Request) {
 
 	offset := (page - 1) * limit
 
-	articles, err := h.DB.GetArticles(filter, feedID, category, limit, offset)
+	// Get show_hidden_articles setting
+	showHiddenStr, _ := h.DB.GetSetting("show_hidden_articles")
+	showHidden := showHiddenStr == "true"
+
+	articles, err := h.DB.GetArticles(filter, feedID, category, showHidden, limit, offset)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -285,17 +289,21 @@ func (h *Handler) HandleSettings(w http.ResponseWriter, r *http.Request) {
 		maxArticleAge, _ := h.DB.GetSetting("max_article_age_days")
 		language, _ := h.DB.GetSetting("language")
 		theme, _ := h.DB.GetSetting("theme")
+		lastUpdate, _ := h.DB.GetSetting("last_article_update")
+		showHidden, _ := h.DB.GetSetting("show_hidden_articles")
 		json.NewEncoder(w).Encode(map[string]string{
-			"update_interval":      interval,
-			"translation_enabled":  translationEnabled,
-			"target_language":      targetLang,
-			"translation_provider": provider,
-			"deepl_api_key":        apiKey,
-			"auto_cleanup_enabled": autoCleanup,
-			"max_cache_size_mb":    maxCacheSize,
-			"max_article_age_days": maxArticleAge,
-			"language":             language,
-			"theme":                theme,
+			"update_interval":       interval,
+			"translation_enabled":   translationEnabled,
+			"target_language":       targetLang,
+			"translation_provider":  provider,
+			"deepl_api_key":         apiKey,
+			"auto_cleanup_enabled":  autoCleanup,
+			"max_cache_size_mb":     maxCacheSize,
+			"max_article_age_days":  maxArticleAge,
+			"language":              language,
+			"theme":                 theme,
+			"last_article_update":   lastUpdate,
+			"show_hidden_articles":  showHidden,
 		})
 	} else if r.Method == http.MethodPost {
 		var req struct {
@@ -309,6 +317,7 @@ func (h *Handler) HandleSettings(w http.ResponseWriter, r *http.Request) {
 			MaxArticleAgeDays   string `json:"max_article_age_days"`
 			Language            string `json:"language"`
 			Theme               string `json:"theme"`
+			ShowHiddenArticles  string `json:"show_hidden_articles"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -347,6 +356,10 @@ func (h *Handler) HandleSettings(w http.ResponseWriter, r *http.Request) {
 
 		if req.Theme != "" {
 			h.DB.SetSetting("theme", req.Theme)
+		}
+
+		if req.ShowHiddenArticles != "" {
+			h.DB.SetSetting("show_hidden_articles", req.ShowHiddenArticles)
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -412,6 +425,47 @@ func (h *Handler) HandleTranslateArticle(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(map[string]string{
 		"translated_title": translatedTitle,
 	})
+}
+
+// HandleClearTranslations clears all translated titles from the database
+func (h *Handler) HandleClearTranslations(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := h.DB.ClearAllTranslations(); err != nil {
+		log.Printf("Error clearing translations: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// HandleToggleHideArticle toggles the hidden status of an article
+func (h *Handler) HandleToggleHideArticle(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	idStr := r.URL.Query().Get("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid article ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.DB.ToggleArticleHidden(id); err != nil {
+		log.Printf("Error toggling article hidden status: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
 // HandleCheckUpdates checks for the latest version on GitHub

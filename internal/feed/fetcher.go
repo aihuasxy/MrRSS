@@ -120,6 +120,9 @@ Finish:
 	f.mu.Lock()
 	f.progress.IsRunning = false
 	f.mu.Unlock()
+	
+	// Update last article update time
+	f.db.SetSetting("last_article_update", time.Now().Format(time.RFC3339))
 }
 
 func (f *Fetcher) FetchFeed(ctx context.Context, feed models.Feed) {
@@ -175,11 +178,18 @@ func (f *Fetcher) FetchFeed(ctx context.Context, feed models.Feed) {
 			}
 		}
 
+		// Extract content from RSS item (prefer Content over Description)
+		content := item.Content
+		if content == "" {
+			content = item.Description
+		}
+
 		article := &models.Article{
 			FeedID:          feed.ID,
 			Title:           item.Title,
 			URL:             item.Link,
 			ImageURL:        imageURL,
+			Content:         content,
 			PublishedAt:     published,
 			TranslatedTitle: translatedTitle,
 		}
