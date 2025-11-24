@@ -4,6 +4,10 @@ import { i18n } from './i18n.js'
 export const store = reactive({
     articles: [],
     feeds: [],
+    unreadCounts: {
+        total: 0,
+        feedCounts: {}
+    },
     currentFilter: 'all', // 'all', 'unread', 'favorites'
     currentFeedId: null,
     currentCategory: null,
@@ -92,9 +96,39 @@ export const store = reactive({
             const res = await fetch('/api/feeds');
             const data = await res.json();
             this.feeds = data || [];
+            // Fetch unread counts after fetching feeds
+            await this.fetchUnreadCounts();
         } catch (e) {
             console.error(e);
             this.feeds = [];
+        }
+    },
+
+    async fetchUnreadCounts() {
+        try {
+            const res = await fetch('/api/articles/unread-counts');
+            const data = await res.json();
+            this.unreadCounts = {
+                total: data.total || 0,
+                feedCounts: data.feed_counts || {}
+            };
+        } catch (e) {
+            console.error(e);
+            this.unreadCounts = { total: 0, feedCounts: {} };
+        }
+    },
+
+    async markAllAsRead(feedId = null) {
+        try {
+            const url = feedId 
+                ? `/api/articles/mark-all-read?feed_id=${feedId}`
+                : '/api/articles/mark-all-read';
+            await fetch(url, { method: 'POST' });
+            // Refresh articles and unread counts
+            await this.fetchArticles();
+            await this.fetchUnreadCounts();
+        } catch (e) {
+            console.error(e);
         }
     },
 
@@ -174,16 +208,18 @@ export const store = reactive({
                     isRunning: data.is_running
                 };
 
-                // Progressive refresh: update articles whenever progress advances
+                // Progressive refresh: update articles and unread counts whenever progress advances
                 if (data.current > lastCurrent) {
                     lastCurrent = data.current;
                     this.fetchArticles();
+                    this.fetchUnreadCounts();
                 }
 
                 if (!data.is_running) {
                     clearInterval(interval);
                     this.fetchFeeds();
                     this.fetchArticles();
+                    this.fetchUnreadCounts();
                     
                     // Check for app updates after initial refresh completes
                     this.checkForAppUpdates();

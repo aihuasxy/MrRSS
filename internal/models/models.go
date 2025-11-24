@@ -10,6 +10,7 @@ type Feed struct {
 	Category    string    `json:"category"`
 	ImageURL    string    `json:"image_url"` // New field
 	LastUpdated time.Time `json:"last_updated"`
+	LastError   string    `json:"last_error,omitempty"` // Track last fetch error
 }
 
 type Article struct {

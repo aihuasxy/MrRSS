@@ -96,7 +96,8 @@ func initSchema(db *sql.DB) error {
 		description TEXT,
 		category TEXT DEFAULT '',
 		image_url TEXT DEFAULT '',
-		last_updated DATETIME
+		last_updated DATETIME,
+		last_error TEXT DEFAULT ''
 	);
 
 	CREATE TABLE IF NOT EXISTS articles (
@@ -142,6 +143,7 @@ func runMigrations(db *sql.DB) error {
 	// SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we ignore errors if columns already exist
 	_, _ = db.Exec(`ALTER TABLE articles ADD COLUMN content TEXT DEFAULT ''`)
 	_, _ = db.Exec(`ALTER TABLE articles ADD COLUMN is_hidden BOOLEAN DEFAULT 0`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN last_error TEXT DEFAULT ''`)
 	
 	return nil
 }
@@ -166,7 +168,7 @@ func (db *DB) DeleteFeed(id int64) error {
 
 func (db *DB) GetFeeds() ([]models.Feed, error) {
 	db.WaitForReady()
-	rows, err := db.Query("SELECT id, title, url, description, category, image_url, last_updated FROM feeds")
+	rows, err := db.Query("SELECT id, title, url, description, category, image_url, last_updated, last_error FROM feeds")
 	if err != nil {
 		return nil, err
 	}
@@ -175,12 +177,13 @@ func (db *DB) GetFeeds() ([]models.Feed, error) {
 	var feeds []models.Feed
 	for rows.Next() {
 		var f models.Feed
-		var category, imageURL sql.NullString
-		if err := rows.Scan(&f.ID, &f.Title, &f.URL, &f.Description, &category, &imageURL, &f.LastUpdated); err != nil {
+		var category, imageURL, lastError sql.NullString
+		if err := rows.Scan(&f.ID, &f.Title, &f.URL, &f.Description, &category, &imageURL, &f.LastUpdated, &lastError); err != nil {
 			return nil, err
 		}
 		f.Category = category.String
 		f.ImageURL = imageURL.String
+		f.LastError = lastError.String
 		feeds = append(feeds, f)
 	}
 	return feeds, nil
@@ -304,6 +307,12 @@ func (db *DB) UpdateFeedCategory(id int64, category string) error {
 func (db *DB) UpdateFeedImage(id int64, imageURL string) error {
 	db.WaitForReady()
 	_, err := db.Exec("UPDATE feeds SET image_url = ? WHERE id = ?", imageURL, id)
+	return err
+}
+
+func (db *DB) UpdateFeedError(id int64, errorMsg string) error {
+	db.WaitForReady()
+	_, err := db.Exec("UPDATE feeds SET last_error = ? WHERE id = ?", errorMsg, id)
 	return err
 }
 
@@ -454,4 +463,67 @@ func (db *DB) GetDatabaseSizeMB() (float64, error) {
 	sizeMB := float64(sizeBytes) / (1024 * 1024)
 	
 	return sizeMB, nil
+}
+
+// GetTotalUnreadCount returns the total number of unread articles
+func (db *DB) GetTotalUnreadCount() (int, error) {
+	db.WaitForReady()
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM articles WHERE is_read = 0 AND is_hidden = 0").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GetUnreadCountByFeed returns the number of unread articles for a specific feed
+func (db *DB) GetUnreadCountByFeed(feedID int64) (int, error) {
+	db.WaitForReady()
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM articles WHERE feed_id = ? AND is_read = 0 AND is_hidden = 0", feedID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GetUnreadCountsForAllFeeds returns a map of feed_id to unread count
+func (db *DB) GetUnreadCountsForAllFeeds() (map[int64]int, error) {
+	db.WaitForReady()
+	rows, err := db.Query(`
+		SELECT feed_id, COUNT(*) 
+		FROM articles 
+		WHERE is_read = 0 AND is_hidden = 0 
+		GROUP BY feed_id
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	counts := make(map[int64]int)
+	for rows.Next() {
+		var feedID int64
+		var count int
+		if err := rows.Scan(&feedID, &count); err != nil {
+			log.Println("Error scanning unread count:", err)
+			continue
+		}
+		counts[feedID] = count
+	}
+	return counts, rows.Err()
+}
+
+// MarkAllAsReadForFeed marks all articles in a feed as read
+func (db *DB) MarkAllAsReadForFeed(feedID int64) error {
+	db.WaitForReady()
+	_, err := db.Exec("UPDATE articles SET is_read = 1 WHERE feed_id = ? AND is_hidden = 0", feedID)
+	return err
+}
+
+// MarkAllAsRead marks all articles as read
+func (db *DB) MarkAllAsRead() error {
+	db.WaitForReady()
+	_, err := db.Exec("UPDATE articles SET is_read = 1 WHERE is_hidden = 0")
+	return err
 }

@@ -96,6 +96,8 @@ func main() {
 	apiMux.HandleFunc("/api/articles/clear-translations", h.HandleClearTranslations)
 	apiMux.HandleFunc("/api/articles/toggle-hide", h.HandleToggleHideArticle)
 	apiMux.HandleFunc("/api/articles/content", h.HandleGetArticleContent)
+	apiMux.HandleFunc("/api/articles/unread-counts", h.HandleGetUnreadCounts)
+	apiMux.HandleFunc("/api/articles/mark-all-read", h.HandleMarkAllAsRead)
 	apiMux.HandleFunc("/api/settings", h.HandleSettings)
 	apiMux.HandleFunc("/api/refresh", h.HandleRefresh)
 	apiMux.HandleFunc("/api/progress", h.HandleProgress)

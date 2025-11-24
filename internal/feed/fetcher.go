@@ -129,8 +129,13 @@ func (f *Fetcher) FetchFeed(ctx context.Context, feed models.Feed) {
 	parsedFeed, err := f.fp.ParseURLWithContext(feed.URL, ctx)
 	if err != nil {
 		log.Printf("Error parsing feed %s: %v", feed.URL, err)
+		// Update feed with error status
+		f.db.UpdateFeedError(feed.ID, err.Error())
 		return
 	}
+	
+	// Clear any previous error on successful fetch
+	f.db.UpdateFeedError(feed.ID, "")
 
 	// Update Feed Image if available and not set
 	if feed.ImageURL == "" && parsedFeed.Image != nil {
