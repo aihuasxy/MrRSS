@@ -214,10 +214,10 @@ onBeforeUnmount(() => {
                             </div>
                         </div>
                         <p class="text-base sm:text-lg font-medium text-text-primary mb-1 sm:mb-2">
-                            {{ store.i18n.locale.value === 'zh' ? '加载内容中' : 'Loading content' }}
+                            {{ store.i18n.t('loadingContent') }}
                         </p>
                         <p class="text-xs sm:text-sm text-text-secondary px-4 text-center">
-                            {{ store.i18n.locale.value === 'zh' ? '正在从 RSS 源获取文章内容...' : 'Fetching article content from RSS feed...' }}
+                            {{ store.i18n.t('fetchingArticleContent') }}
                         </p>
                     </div>
                     

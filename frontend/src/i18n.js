@@ -185,6 +185,10 @@ export const translations = {
         errorCleaningDatabase: 'Error cleaning up database',
         importFailed: 'Import failed: {error}',
         
+        // Loading Messages
+        loadingContent: 'Loading content',
+        fetchingArticleContent: 'Fetching article content from RSS feed...',
+        
         // Prompts
         enterCategoryName: 'Enter new category name:',
         moveFeeds: 'Move Feeds',
@@ -375,6 +379,10 @@ export const translations = {
         errorUpdatingFeed: '更新订阅时出错',
         errorCleaningDatabase: '清理数据库时出错',
         importFailed: '导入失败：{error}',
+        
+        // Loading Messages
+        loadingContent: '加载内容中',
+        fetchingArticleContent: '正在从 RSS 源获取文章内容...',
         
         // Prompts
         enterCategoryName: '输入新的分类名称：',
