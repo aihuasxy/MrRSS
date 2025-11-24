@@ -455,3 +455,66 @@ func (db *DB) GetDatabaseSizeMB() (float64, error) {
 	
 	return sizeMB, nil
 }
+
+// GetTotalUnreadCount returns the total number of unread articles
+func (db *DB) GetTotalUnreadCount() (int, error) {
+	db.WaitForReady()
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM articles WHERE is_read = 0 AND is_hidden = 0").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GetUnreadCountByFeed returns the number of unread articles for a specific feed
+func (db *DB) GetUnreadCountByFeed(feedID int64) (int, error) {
+	db.WaitForReady()
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM articles WHERE feed_id = ? AND is_read = 0 AND is_hidden = 0", feedID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GetUnreadCountsForAllFeeds returns a map of feed_id to unread count
+func (db *DB) GetUnreadCountsForAllFeeds() (map[int64]int, error) {
+	db.WaitForReady()
+	rows, err := db.Query(`
+		SELECT feed_id, COUNT(*) 
+		FROM articles 
+		WHERE is_read = 0 AND is_hidden = 0 
+		GROUP BY feed_id
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	counts := make(map[int64]int)
+	for rows.Next() {
+		var feedID int64
+		var count int
+		if err := rows.Scan(&feedID, &count); err != nil {
+			log.Println("Error scanning unread count:", err)
+			continue
+		}
+		counts[feedID] = count
+	}
+	return counts, rows.Err()
+}
+
+// MarkAllAsReadForFeed marks all articles in a feed as read
+func (db *DB) MarkAllAsReadForFeed(feedID int64) error {
+	db.WaitForReady()
+	_, err := db.Exec("UPDATE articles SET is_read = 1 WHERE feed_id = ?", feedID)
+	return err
+}
+
+// MarkAllAsRead marks all articles as read
+func (db *DB) MarkAllAsRead() error {
+	db.WaitForReady()
+	_, err := db.Exec("UPDATE articles SET is_read = 1")
+	return err
+}

@@ -82,6 +82,8 @@ function onFeedContextMenu(e, feed) {
             x: e.clientX,
             y: e.clientY,
             items: [
+                { label: store.i18n.t('markAllAsReadFeed'), action: 'markAllRead', icon: 'ph-check-circle' },
+                { separator: true },
                 { label: store.i18n.t('openWebsite'), action: 'openWebsite', icon: 'ph-globe' },
                 { separator: true },
                 { label: store.i18n.t('editSubscription'), action: 'edit', icon: 'ph-pencil' },
@@ -94,7 +96,10 @@ function onFeedContextMenu(e, feed) {
 }
 
 async function handleFeedAction(action, feed) {
-    if (action === 'delete') {
+    if (action === 'markAllRead') {
+        await store.markAllAsRead(feed.id);
+        window.showToast(store.i18n.t('markedAllAsRead'), 'success');
+    } else if (action === 'delete') {
         const confirmed = await window.showConfirm({
             title: 'Unsubscribe',
             message: `Are you sure you want to unsubscribe from ${feed.title}?`,
@@ -179,7 +184,9 @@ async function handleCategoryAction(action, categoryName) {
 
         <nav class="p-3 space-y-1">
             <button @click="store.setFilter('all')" :class="['nav-item', store.currentFilter === 'all' ? 'active' : '']">
-                <i class="ph ph-list-dashes"></i> {{ store.i18n.t('allArticles') }}
+                <i class="ph ph-list-dashes"></i> 
+                <span class="flex-1 text-left">{{ store.i18n.t('allArticles') }}</span>
+                <span v-if="store.unreadCounts.total > 0" class="unread-badge">{{ store.unreadCounts.total }}</span>
             </button>
             <button @click="store.setFilter('unread')" :class="['nav-item', store.currentFilter === 'unread' ? 'active' : '']">
                 <i class="ph ph-circle"></i> {{ store.i18n.t('unread') }}
@@ -211,7 +218,8 @@ async function handleCategoryAction(action, categoryName) {
                         <div class="w-4 h-4 flex items-center justify-center shrink-0">
                             <img :src="feed.image_url || getFavicon(feed.url)" class="w-full h-full object-contain" @error="$event.target.style.display='none'">
                         </div>
-                        <span class="truncate">{{ feed.title }}</span>
+                        <span class="truncate flex-1">{{ feed.title }}</span>
+                        <span v-if="store.unreadCounts.feedCounts[feed.id] > 0" class="unread-badge">{{ store.unreadCounts.feedCounts[feed.id] }}</span>
                     </div>
                 </div>
             </div>
@@ -233,7 +241,8 @@ async function handleCategoryAction(action, categoryName) {
                         <div class="w-4 h-4 flex items-center justify-center shrink-0">
                             <img :src="feed.image_url || getFavicon(feed.url)" class="w-full h-full object-contain" @error="$event.target.style.display='none'">
                         </div>
-                        <span class="truncate">{{ feed.title }}</span>
+                        <span class="truncate flex-1">{{ feed.title }}</span>
+                        <span v-if="store.unreadCounts.feedCounts[feed.id] > 0" class="unread-badge">{{ store.unreadCounts.feedCounts[feed.id] }}</span>
                     </div>
                 </div>
              </div>
@@ -277,5 +286,8 @@ async function handleCategoryAction(action, categoryName) {
 }
 .footer-btn {
     @apply flex-1 flex items-center justify-center gap-2 p-2.5 text-text-secondary rounded-lg text-xl hover:bg-bg-tertiary hover:text-text-primary transition-colors;
+}
+.unread-badge {
+    @apply bg-accent text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] px-1.5 flex items-center justify-center;
 }
 </style>

@@ -14,6 +14,7 @@ export const translations = {
         // Article List
         articles: 'Articles',
         refresh: 'Refresh',
+        markAllRead: 'Mark All as Read',
         search: 'Search...',
         noArticles: 'No articles found.',
         
@@ -33,6 +34,7 @@ export const translations = {
         unsubscribe: 'Unsubscribe',
         editSubscription: 'Edit Subscription',
         renameCategory: 'Rename Category',
+        markAllAsReadFeed: 'Mark All as Read',
         addToFavorites: 'Add to Favorites',
         removeFromFavorites: 'Remove from Favorites',
         hideArticle: 'Hide Article',
@@ -174,6 +176,7 @@ export const translations = {
         feedsDeletedSuccess: 'Feeds deleted successfully',
         feedsMovedSuccess: 'Feeds moved successfully',
         unsubscribedSuccess: 'Successfully unsubscribed',
+        markedAllAsRead: 'All articles marked as read',
         databaseCleanedSuccess: 'Database cleaned up successfully. {count} articles deleted.',
         opmlImportedSuccess: 'OPML Imported. Feeds will appear shortly.',
         errorSavingSettings: 'Error saving settings',
@@ -200,6 +203,7 @@ export const translations = {
         // Article List
         articles: '文章',
         refresh: '刷新',
+        markAllRead: '全部已读',
         search: '搜索...',
         noArticles: '未找到文章。',
         
@@ -219,6 +223,7 @@ export const translations = {
         unsubscribe: '取消订阅',
         editSubscription: '编辑订阅',
         renameCategory: '重命名分类',
+        markAllAsReadFeed: '全部已读',
         addToFavorites: '添加到收藏',
         removeFromFavorites: '从收藏中移除',
         hideArticle: '隐藏文章',
@@ -360,6 +365,7 @@ export const translations = {
         feedsDeletedSuccess: '订阅删除成功',
         feedsMovedSuccess: '订阅移动成功',
         unsubscribedSuccess: '取消订阅成功',
+        markedAllAsRead: '所有文章已标记为已读',
         databaseCleanedSuccess: '数据库清理成功。已删除 {count} 篇文章。',
         opmlImportedSuccess: 'OPML 已导入。订阅源即将显示。',
         errorSavingSettings: '保存设置时出错',

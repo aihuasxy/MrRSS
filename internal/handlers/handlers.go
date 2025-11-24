@@ -211,6 +211,48 @@ func (h *Handler) HandleToggleFavorite(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (h *Handler) HandleGetUnreadCounts(w http.ResponseWriter, r *http.Request) {
+	// Get total unread count
+	totalCount, err := h.DB.GetTotalUnreadCount()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Get unread counts per feed
+	feedCounts, err := h.DB.GetUnreadCountsForAllFeeds()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"total":       totalCount,
+		"feed_counts": feedCounts,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *Handler) HandleMarkAllAsRead(w http.ResponseWriter, r *http.Request) {
+	feedIDStr := r.URL.Query().Get("feed_id")
+	
+	var err error
+	if feedIDStr != "" {
+		// Mark all as read for a specific feed
+		feedID, _ := strconv.ParseInt(feedIDStr, 10, 64)
+		err = h.DB.MarkAllAsReadForFeed(feedID)
+	} else {
+		// Mark all as read globally
+		err = h.DB.MarkAllAsRead()
+	}
+	
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func (h *Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	go h.Fetcher.FetchAll(context.Background())
 	w.WriteHeader(http.StatusOK)

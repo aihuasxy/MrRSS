@@ -155,6 +155,8 @@ function selectArticle(article) {
     if (!article.is_read) {
         article.is_read = true;
         fetch(`/api/articles/read?id=${article.id}&read=true`, { method: 'POST' });
+        // Update unread counts after marking as read
+        store.fetchUnreadCounts();
     }
 }
 
@@ -208,7 +210,9 @@ async function handleArticleAction(action, article) {
     if (action === 'toggleRead') {
         const newState = !article.is_read;
         article.is_read = newState;
-        fetch(`/api/articles/read?id=${article.id}&read=${newState}`, { method: 'POST' });
+        await fetch(`/api/articles/read?id=${article.id}&read=${newState}`, { method: 'POST' });
+        // Update unread counts after toggling read status
+        store.fetchUnreadCounts();
     } else if (action === 'toggleFavorite') {
         const newState = !article.is_favorite;
         article.is_favorite = newState;
@@ -236,7 +240,9 @@ async function handleArticleAction(action, article) {
         // Mark as read
         if (!article.is_read) {
             article.is_read = true;
-            fetch(`/api/articles/read?id=${article.id}&read=true`, { method: 'POST' });
+            await fetch(`/api/articles/read?id=${article.id}&read=true`, { method: 'POST' });
+            // Update unread counts after marking as read
+            store.fetchUnreadCounts();
         }
         
         // Trigger the render action
@@ -255,6 +261,11 @@ async function refreshArticles() {
     }
 }
 
+async function markAllAsRead() {
+    await store.markAllAsRead();
+    window.showToast(store.i18n.t('markedAllAsRead'), 'success');
+}
+
 </script>
 
 <template>
@@ -263,6 +274,9 @@ async function refreshArticles() {
             <div class="flex items-center justify-between mb-3">
                 <h3 class="m-0 text-lg font-semibold">{{ store.i18n.t('articles') }}</h3>
                 <div class="flex items-center gap-2">
+                    <button @click="markAllAsRead" class="text-text-secondary hover:text-text-primary hover:bg-bg-tertiary p-1.5 rounded transition-colors" :title="store.i18n.t('markAllRead')">
+                        <i class="ph ph-check-circle text-xl"></i>
+                    </button>
                     <div class="relative">
                         <button @click="refreshArticles" class="text-text-secondary hover:text-text-primary hover:bg-bg-tertiary p-1.5 rounded transition-colors" :title="store.i18n.t('refresh')">
                             <i :class="['ph ph-arrow-clockwise text-xl', store.refreshProgress.isRunning ? 'ph-spin' : '']"></i>
