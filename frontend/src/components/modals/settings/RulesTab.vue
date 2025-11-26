@@ -1,9 +1,9 @@
 <script setup>
 import { store } from '../../../store.js';
-import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { 
-    PhLightning, PhPlus, PhTrash, PhPencil, PhToggleLeft, PhToggleRight,
-    PhPlay, PhFunnel, PhListChecks, PhCaretDown, PhCaretUp, PhInfo
+    PhLightning, PhPlus, PhTrash, PhPencil,
+    PhPlay, PhFunnel, PhListChecks
 } from "@phosphor-icons/vue";
 import RuleEditorModal from '../RuleEditorModal.vue';
 
@@ -94,6 +94,8 @@ async function toggleRuleEnabled(rule) {
 
 // Save rule from editor
 async function handleSaveRule(rule) {
+    const isNew = !editingRule.value;
+    
     if (editingRule.value) {
         // Update existing rule
         const index = rules.value.findIndex(r => r.id === rule.id);
@@ -110,6 +112,11 @@ async function handleSaveRule(rule) {
     await saveRules();
     showRuleEditor.value = false;
     window.showToast(store.i18n.t('ruleSavedSuccess'), 'success');
+    
+    // Apply rule to existing articles when adding a new rule
+    if (isNew && rule.enabled) {
+        await applyRule(rule);
+    }
 }
 
 // Apply rule now
@@ -164,7 +171,8 @@ function formatSingleCondition(condition) {
         'published_after': store.i18n.t('publishedAfter'),
         'published_before': store.i18n.t('publishedBefore'),
         'is_read': store.i18n.t('readStatus'),
-        'is_favorite': store.i18n.t('favoriteStatus')
+        'is_favorite': store.i18n.t('favoriteStatus'),
+        'is_hidden': store.i18n.t('hiddenStatus')
     };
     
     const field = fieldLabels[condition.field] || condition.field;
@@ -197,81 +205,86 @@ function formatActions(rule) {
 </script>
 
 <template>
-    <div class="space-y-3">
-        <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-                <PhLightning :size="18" class="text-text-secondary" />
-                <div>
-                    <h3 class="font-semibold text-sm">{{ store.i18n.t('rules') }}</h3>
-                    <p class="text-xs text-text-secondary">{{ store.i18n.t('rulesDesc') }}</p>
-                </div>
-            </div>
-            <button @click="addRule" class="btn-primary text-xs py-1 px-2">
-                <PhPlus :size="12" />
-                {{ store.i18n.t('addRule') }}
-            </button>
-        </div>
-        
-        <!-- Rules List -->
-        <div v-if="rules.length === 0" class="empty-state">
-            <PhLightning :size="48" class="mx-auto mb-3 opacity-50" />
-            <p class="text-text-secondary">{{ store.i18n.t('noRules') }}</p>
-            <p class="text-text-secondary text-xs mt-1">{{ store.i18n.t('noRulesHint') }}</p>
-        </div>
-        
-        <div v-else class="space-y-2">
-            <div v-for="rule in rules" :key="rule.id" class="rule-card">
-                <div class="flex items-start gap-3">
-                    <!-- Enable toggle -->
-                    <button @click="toggleRuleEnabled(rule)" class="toggle-btn" :title="rule.enabled ? store.i18n.t('ruleEnabled') : store.i18n.t('ruleDisabled')">
-                        <PhToggleRight v-if="rule.enabled" :size="24" class="text-accent" />
-                        <PhToggleLeft v-else :size="24" class="text-text-secondary" />
-                    </button>
-                    
-                    <!-- Rule info -->
+    <div class="space-y-4 sm:space-y-6">
+        <div class="setting-group">
+            <label class="font-semibold mb-2 sm:mb-3 text-text-secondary uppercase text-xs tracking-wider flex items-center gap-2">
+                <PhLightning :size="14" class="sm:w-4 sm:h-4" />
+                {{ store.i18n.t('rules') }}
+            </label>
+            
+            <!-- Header with description and add button -->
+            <div class="setting-item mb-2 sm:mb-3">
+                <div class="flex-1 flex items-start gap-2 sm:gap-3 min-w-0">
+                    <PhLightning :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
                     <div class="flex-1 min-w-0">
-                        <div class="font-medium text-sm truncate" :class="{ 'text-text-secondary': !rule.enabled }">
-                            {{ rule.name || store.i18n.t('rules') + ' #' + rule.id }}
-                        </div>
-                        <div class="text-xs text-text-secondary mt-1 flex flex-wrap items-center gap-1">
-                            <span class="condition-badge">
-                                <PhFunnel :size="10" />
-                                {{ formatCondition(rule) }}
-                            </span>
-                            <span class="text-text-tertiary">→</span>
-                            <span class="action-badge">
-                                <PhListChecks :size="10" />
-                                {{ formatActions(rule) }}
-                            </span>
-                        </div>
+                        <div class="font-medium mb-1 text-sm sm:text-base">{{ store.i18n.t('rules') }}</div>
+                        <div class="text-xs text-text-secondary hidden sm:block">{{ store.i18n.t('rulesDesc') }}</div>
                     </div>
-                    
-                    <!-- Actions -->
-                    <div class="flex items-center gap-1 shrink-0">
-                        <button 
-                            @click="applyRule(rule)" 
-                            class="action-btn" 
-                            :disabled="applyingRuleId === rule.id"
-                            :title="store.i18n.t('applyRuleNow')"
-                        >
-                            <PhPlay v-if="applyingRuleId !== rule.id" :size="14" />
-                            <span v-else class="animate-spin">⟳</span>
-                        </button>
-                        <button @click="editRule(rule)" class="action-btn" :title="store.i18n.t('editRule')">
-                            <PhPencil :size="14" />
-                        </button>
-                        <button @click="deleteRule(rule.id)" class="action-btn danger" :title="store.i18n.t('deleteRule')">
-                            <PhTrash :size="14" />
-                        </button>
+                </div>
+                <button @click="addRule" class="btn-primary">
+                    <PhPlus :size="16" class="sm:w-5 sm:h-5" />
+                    <span class="hidden sm:inline">{{ store.i18n.t('addRule') }}</span>
+                </button>
+            </div>
+            
+            <!-- Empty state -->
+            <div v-if="rules.length === 0" class="empty-state">
+                <PhLightning :size="48" class="mx-auto mb-3 opacity-30" />
+                <p class="text-text-secondary text-sm sm:text-base">{{ store.i18n.t('noRules') }}</p>
+                <p class="text-text-secondary text-xs mt-1">{{ store.i18n.t('noRulesHint') }}</p>
+            </div>
+            
+            <!-- Rules List -->
+            <div v-else class="space-y-2 sm:space-y-3">
+                <div v-for="rule in rules" :key="rule.id" class="rule-item">
+                    <div class="flex items-start gap-2 sm:gap-4">
+                        <!-- Toggle and Info -->
+                        <div class="flex-1 flex items-start gap-2 sm:gap-3 min-w-0">
+                            <input 
+                                type="checkbox" 
+                                :checked="rule.enabled" 
+                                @change="toggleRuleEnabled(rule)"
+                                class="toggle mt-1"
+                            >
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium mb-1 text-sm sm:text-base truncate" :class="{ 'text-text-secondary': !rule.enabled }">
+                                    {{ rule.name || store.i18n.t('rules') + ' #' + rule.id }}
+                                </div>
+                                <div class="text-xs text-text-secondary flex flex-wrap items-center gap-1 sm:gap-2">
+                                    <span class="condition-badge">
+                                        <PhFunnel :size="12" />
+                                        {{ formatCondition(rule) }}
+                                    </span>
+                                    <span class="text-text-tertiary">→</span>
+                                    <span class="action-badge">
+                                        <PhListChecks :size="12" />
+                                        {{ formatActions(rule) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action buttons -->
+                        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+                            <button 
+                                @click="applyRule(rule)" 
+                                class="action-btn" 
+                                :disabled="applyingRuleId === rule.id"
+                                :title="store.i18n.t('applyRuleNow')"
+                            >
+                                <PhPlay v-if="applyingRuleId !== rule.id" :size="18" class="sm:w-5 sm:h-5" />
+                                <span v-else class="animate-spin text-sm">⟳</span>
+                            </button>
+                            <button @click="editRule(rule)" class="action-btn" :title="store.i18n.t('editRule')">
+                                <PhPencil :size="18" class="sm:w-5 sm:h-5" />
+                            </button>
+                            <button @click="deleteRule(rule.id)" class="action-btn danger" :title="store.i18n.t('deleteRule')">
+                                <PhTrash :size="18" class="sm:w-5 sm:h-5" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Tip -->
-        <div class="tip-box">
-            <PhInfo :size="14" class="text-accent shrink-0" />
-            <span>{{ store.i18n.t('conditionIf') }} + {{ store.i18n.t('ruleCondition') }} → {{ store.i18n.t('ruleActions') }}</span>
         </div>
         
         <!-- Rule Editor Modal -->
@@ -286,28 +299,39 @@ function formatActions(rule) {
 </template>
 
 <style scoped>
+.setting-item {
+    @apply flex items-start justify-between gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg bg-bg-secondary border border-border;
+}
+
+.rule-item {
+    @apply p-2 sm:p-3 rounded-lg bg-bg-secondary border border-border;
+}
+
+.toggle {
+    @apply w-10 h-5 appearance-none bg-bg-tertiary rounded-full relative cursor-pointer border border-border transition-colors checked:bg-accent checked:border-accent shrink-0;
+}
+.toggle::after {
+    content: '';
+    @apply absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-sm transition-transform;
+}
+.toggle:checked::after {
+    transform: translateX(20px);
+}
+
 .btn-primary {
-    @apply bg-accent text-white border-none rounded cursor-pointer flex items-center gap-1 font-medium hover:bg-accent-hover transition-colors;
+    @apply bg-accent text-white border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg cursor-pointer flex items-center gap-1 sm:gap-2 font-medium hover:bg-accent-hover transition-colors text-sm sm:text-base;
 }
 
 .empty-state {
-    @apply text-center py-8;
-}
-
-.rule-card {
-    @apply p-3 rounded-lg bg-bg-secondary border border-border;
-}
-
-.toggle-btn {
-    @apply p-0 bg-transparent border-none cursor-pointer transition-colors mt-0.5;
+    @apply text-center py-8 sm:py-12;
 }
 
 .condition-badge, .action-badge {
-    @apply inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-bg-tertiary;
+    @apply inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs bg-bg-tertiary;
 }
 
 .action-btn {
-    @apply p-1.5 rounded-md bg-transparent border-none cursor-pointer text-text-secondary hover:bg-bg-tertiary hover:text-text-primary transition-colors;
+    @apply p-1.5 sm:p-2 rounded-lg bg-transparent border-none cursor-pointer text-text-secondary hover:bg-bg-tertiary hover:text-text-primary transition-colors;
 }
 
 .action-btn.danger:hover {
@@ -318,14 +342,9 @@ function formatActions(rule) {
     @apply opacity-50 cursor-not-allowed;
 }
 
-.tip-box {
-    @apply flex items-center gap-2 text-xs text-text-secondary py-1.5 px-2.5 rounded-md;
-    background-color: rgba(59, 130, 246, 0.05);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
 .animate-spin {
     animation: spin 1s linear infinite;
+    display: inline-block;
 }
 
 @keyframes spin {

@@ -3,6 +3,7 @@ package feed
 import (
 	"MrRSS/internal/database"
 	"MrRSS/internal/models"
+	"MrRSS/internal/rules"
 	"MrRSS/internal/translation"
 	"context"
 	"log"
@@ -216,6 +217,19 @@ func (f *Fetcher) FetchFeed(ctx context.Context, feed models.Feed) {
 	if len(articlesToSave) > 0 {
 		if err := f.db.SaveArticles(ctx, articlesToSave); err != nil {
 			log.Printf("Error saving articles for feed %s: %v", feed.Title, err)
+		} else {
+			// Apply rules to newly saved articles
+			// Get the saved articles with IDs from database (the recent ones for this feed)
+			savedArticles, err := f.db.GetArticles("", feed.ID, "", false, len(articlesToSave), 0)
+			if err == nil && len(savedArticles) > 0 {
+				engine := rules.NewEngine(f.db)
+				affected, err := engine.ApplyRulesToArticles(savedArticles)
+				if err != nil {
+					log.Printf("Error applying rules for feed %s: %v", feed.Title, err)
+				} else if affected > 0 {
+					log.Printf("Applied rules to %d articles in feed %s", affected, feed.Title)
+				}
+			}
 		}
 	}
 	log.Printf("Updated feed: %s", feed.Title)

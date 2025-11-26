@@ -25,7 +25,8 @@ const fieldOptions = [
     { value: 'published_after', labelKey: 'publishedAfter', multiSelect: false },
     { value: 'published_before', labelKey: 'publishedBefore', multiSelect: false },
     { value: 'is_read', labelKey: 'readStatus', multiSelect: false, booleanField: true },
-    { value: 'is_favorite', labelKey: 'favoriteStatus', multiSelect: false, booleanField: true }
+    { value: 'is_favorite', labelKey: 'favoriteStatus', multiSelect: false, booleanField: true },
+    { value: 'is_hidden', labelKey: 'hiddenStatus', multiSelect: false, booleanField: true }
 ];
 
 // Operator options for article title
