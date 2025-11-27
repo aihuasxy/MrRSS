@@ -1,0 +1,103 @@
+package feed
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"time"
+
+	"github.com/mmcdole/gofeed"
+)
+
+// ScriptExecutor handles executing custom scripts for feed fetching
+type ScriptExecutor struct {
+	scriptsDir string
+}
+
+// NewScriptExecutor creates a new ScriptExecutor
+func NewScriptExecutor(scriptsDir string) *ScriptExecutor {
+	return &ScriptExecutor{scriptsDir: scriptsDir}
+}
+
+// ExecuteScript runs the given script and parses the output as an RSS feed
+// The script should output valid RSS/Atom XML to stdout
+func (e *ScriptExecutor) ExecuteScript(ctx context.Context, scriptPath string) (*gofeed.Feed, error) {
+	// Construct full path
+	fullPath := filepath.Join(e.scriptsDir, scriptPath)
+	fullPath = filepath.Clean(fullPath)
+
+	// Security check: ensure the script is within the scripts directory
+	if !strings.HasPrefix(fullPath, filepath.Clean(e.scriptsDir)) {
+		return nil, fmt.Errorf("invalid script path: script must be within scripts directory")
+	}
+
+	// Create a context with timeout (30 seconds for script execution)
+	execCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Prepare command based on OS and file extension
+	var cmd *exec.Cmd
+	ext := strings.ToLower(filepath.Ext(fullPath))
+
+	switch ext {
+	case ".py":
+		// Python script
+		pythonCmd := "python3"
+		if runtime.GOOS == "windows" {
+			pythonCmd = "python"
+		}
+		cmd = exec.CommandContext(execCtx, pythonCmd, fullPath)
+	case ".sh":
+		// Shell script (Unix-like systems)
+		if runtime.GOOS == "windows" {
+			return nil, fmt.Errorf("shell scripts are not supported on Windows")
+		}
+		cmd = exec.CommandContext(execCtx, "bash", fullPath)
+	case ".ps1":
+		// PowerShell script (Windows)
+		if runtime.GOOS != "windows" {
+			cmd = exec.CommandContext(execCtx, "pwsh", "-File", fullPath)
+		} else {
+			cmd = exec.CommandContext(execCtx, "powershell.exe", "-ExecutionPolicy", "Bypass", "-File", fullPath)
+		}
+	case ".js":
+		// Node.js script
+		cmd = exec.CommandContext(execCtx, "node", fullPath)
+	case ".rb":
+		// Ruby script
+		cmd = exec.CommandContext(execCtx, "ruby", fullPath)
+	default:
+		// Try to execute directly (for compiled binaries)
+		cmd = exec.CommandContext(execCtx, fullPath)
+	}
+
+	// Set working directory to the scripts directory
+	cmd.Dir = e.scriptsDir
+
+	// Capture stdout and stderr
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	// Execute the script
+	if err := cmd.Run(); err != nil {
+		stderrStr := stderr.String()
+		if stderrStr != "" {
+			return nil, fmt.Errorf("script execution failed: %v, stderr: %s", err, stderrStr)
+		}
+		return nil, fmt.Errorf("script execution failed: %v", err)
+	}
+
+	// Parse the output as RSS/Atom feed
+	fp := gofeed.NewParser()
+	feed, err := fp.ParseString(stdout.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse script output as feed: %v", err)
+	}
+
+	return feed, nil
+}

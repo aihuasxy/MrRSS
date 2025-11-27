@@ -333,6 +333,16 @@ export interface TranslationMessages {
   applyingRule: string;
   noActionsSelected: string;
   thenDo: string;
+
+  // Custom Script Support
+  feedSource: string;
+  customScript: string;
+  selectScript: string;
+  selectScriptPlaceholder: string;
+  noScriptsFound: string;
+  openScriptsFolder: string;
+  scriptHelp: string;
+  scriptsFolderOpened: string;
 }
 
 export type SupportedLocale = 'en' | 'zh';

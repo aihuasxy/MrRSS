@@ -13,6 +13,7 @@ type Feed struct {
 	LastUpdated        time.Time `json:"last_updated"`
 	LastError          string    `json:"last_error,omitempty"` // Track last fetch error
 	DiscoveryCompleted bool      `json:"discovery_completed"`  // Track if discovery has been run
+	ScriptPath         string    `json:"script_path,omitempty"` // Path to custom script for fetching feed
 }
 
 type Article struct {

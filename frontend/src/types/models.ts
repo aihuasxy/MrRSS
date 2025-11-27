@@ -27,6 +27,7 @@ export interface Feed {
   website_url?: string;
   image_url?: string;
   last_error?: string;
+  script_path?: string;
 }
 
 export interface UnreadCounts {

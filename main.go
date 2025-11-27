@@ -117,6 +117,9 @@ func main() {
 	apiMux.HandleFunc("/api/install-update", h.HandleInstallUpdate)
 	apiMux.HandleFunc("/api/version", h.HandleVersion)
 	apiMux.HandleFunc("/api/rules/apply", h.HandleApplyRule)
+	apiMux.HandleFunc("/api/scripts/dir", h.HandleGetScriptsDir)
+	apiMux.HandleFunc("/api/scripts/open", h.HandleOpenScriptsDir)
+	apiMux.HandleFunc("/api/scripts/list", h.HandleListScripts)
 
 	// Static Files
 	log.Println("Setting up static files...")

@@ -337,6 +337,17 @@ const en: TranslationMessages = {
   applyingRule: 'Applying...',
   noActionsSelected: 'Please select at least one action',
   thenDo: 'then',
+
+  // Custom Script Support
+  feedSource: 'Feed Source',
+  customScript: 'Custom Script',
+  selectScript: 'Select Script',
+  selectScriptPlaceholder: 'Select a script...',
+  noScriptsFound: 'No scripts found in the scripts folder.',
+  openScriptsFolder: 'Open Scripts Folder',
+  scriptHelp:
+    'Scripts should output valid RSS/Atom XML. Supported: Python, Shell, PowerShell, Node.js, Ruby.',
+  scriptsFolderOpened: 'Scripts folder opened',
 };
 
 export default en;

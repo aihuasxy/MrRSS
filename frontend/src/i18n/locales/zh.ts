@@ -336,6 +336,16 @@ const zh: TranslationMessages = {
   applyingRule: '应用中...',
   noActionsSelected: '请至少选择一个操作',
   thenDo: '则',
+
+  // Custom Script Support
+  feedSource: '订阅源类型',
+  customScript: '自定义脚本',
+  selectScript: '选择脚本',
+  selectScriptPlaceholder: '选择一个脚本...',
+  noScriptsFound: '脚本文件夹中未找到脚本。',
+  openScriptsFolder: '打开脚本文件夹',
+  scriptHelp: '脚本应输出有效的 RSS/Atom XML。支持：Python、Shell、PowerShell、Node.js、Ruby。',
+  scriptsFolderOpened: '脚本文件夹已打开',
 };
 
 export default zh;

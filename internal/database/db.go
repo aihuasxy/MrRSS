@@ -86,6 +86,10 @@ func (db *DB) Init() error {
 		// Migration: Add discovery_completed column to feeds table
 		// Error is ignored - if column exists, the operation fails harmlessly.
 		_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN discovery_completed BOOLEAN DEFAULT 0`)
+
+		// Migration: Add script_path column to feeds table for custom script support
+		// Error is ignored - if column exists, the operation fails harmlessly.
+		_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN script_path TEXT DEFAULT ''`)
 	})
 	return err
 }

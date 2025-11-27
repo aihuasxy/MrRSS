@@ -13,6 +13,7 @@ import {
   PhFolder,
   PhPencil,
   PhMagnifyingGlass,
+  PhCode,
 } from '@phosphor-icons/vue';
 import type { Feed } from '@/types/models';
 
@@ -97,6 +98,19 @@ function getFavicon(url: string): string {
     return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}`;
   } catch {
     return '';
+  }
+}
+
+function isScriptFeed(feed: Feed): boolean {
+  return !!feed.script_path;
+}
+
+async function openScriptsFolder() {
+  try {
+    await fetch('/api/scripts/open', { method: 'POST' });
+    window.showToast(t('scriptsFolderOpened'), 'success');
+  } catch (e) {
+    console.error('Failed to open scripts folder:', e);
   }
 }
 </script>
@@ -230,7 +244,17 @@ function getFavicon(url: string): string {
                 {{ feed.category }}
                 <span class="mx-1">•</span>
               </span>
-              <span>{{ feed.url }}</span>
+              <span v-if="isScriptFeed(feed)" class="inline-flex items-center gap-1">
+                <PhCode :size="10" class="inline" />
+                <button
+                  @click.stop="openScriptsFolder"
+                  class="text-accent hover:underline"
+                  :title="t('openScriptsFolder')"
+                >
+                  {{ feed.script_path }}
+                </button>
+              </span>
+              <span v-else>{{ feed.url }}</span>
             </div>
           </div>
           <div class="flex gap-0.5 sm:gap-1 shrink-0">

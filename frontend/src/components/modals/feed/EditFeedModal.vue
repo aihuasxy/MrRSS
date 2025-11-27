@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { PhCode, PhRss } from '@phosphor-icons/vue';
 import type { Feed } from '@/types/models';
 
 const { t } = useI18n();
+
+type FeedType = 'url' | 'script';
 
 interface Props {
   feed: Feed;
@@ -16,35 +19,79 @@ const emit = defineEmits<{
   updated: [];
 }>();
 
+const feedType = ref<FeedType>('url');
 const title = ref('');
 const url = ref('');
 const category = ref('');
+const scriptPath = ref('');
 const isSubmitting = ref(false);
 
-onMounted(() => {
+// Available scripts from the scripts directory
+const availableScripts = ref<Array<{ name: string; path: string; type: string }>>([]);
+const scriptsDir = ref('');
+
+onMounted(async () => {
   title.value = props.feed.title;
   url.value = props.feed.url;
   category.value = props.feed.category;
+  scriptPath.value = props.feed.script_path || '';
+
+  // Determine feed type based on whether it has a script path
+  if (props.feed.script_path) {
+    feedType.value = 'script';
+  }
+
+  await loadScripts();
 });
+
+async function loadScripts() {
+  try {
+    const res = await fetch('/api/scripts/list');
+    if (res.ok) {
+      const data = await res.json();
+      availableScripts.value = data.scripts || [];
+      scriptsDir.value = data.scripts_dir || '';
+    }
+  } catch (e) {
+    console.error('Failed to load scripts:', e);
+  }
+}
 
 function close() {
   emit('close');
 }
 
+const isFormValid = computed(() => {
+  if (feedType.value === 'url') {
+    return url.value.trim() !== '';
+  } else {
+    return scriptPath.value.trim() !== '';
+  }
+});
+
 async function save() {
-  if (!url.value) return;
+  if (!isFormValid.value) return;
   isSubmitting.value = true;
 
   try {
+    const body: Record<string, string | number> = {
+      id: props.feed.id,
+      title: title.value,
+      category: category.value,
+    };
+
+    if (feedType.value === 'url') {
+      body.url = url.value;
+      body.script_path = '';
+    } else {
+      body.url = scriptPath.value ? 'script://' + scriptPath.value : props.feed.url;
+      body.script_path = scriptPath.value;
+    }
+
     const res = await fetch('/api/feeds/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: props.feed.id,
-        title: title.value,
-        url: url.value,
-        category: category.value,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (res.ok) {
@@ -59,6 +106,15 @@ async function save() {
     window.showToast(t('errorUpdatingFeed'), 'error');
   } finally {
     isSubmitting.value = false;
+  }
+}
+
+async function openScriptsFolder() {
+  try {
+    await fetch('/api/scripts/open', { method: 'POST' });
+    window.showToast(t('scriptsFolderOpened'), 'success');
+  } catch (e) {
+    console.error('Failed to open scripts folder:', e);
   }
 }
 </script>
@@ -79,18 +135,88 @@ async function save() {
         >
       </div>
       <div class="p-6">
+        <!-- Feed Type Selector -->
+        <div class="mb-4">
+          <label class="block mb-1.5 font-semibold text-sm text-text-secondary">{{
+            t('feedSource')
+          }}</label>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              @click="feedType = 'url'"
+              :class="[
+                'flex-1 flex items-center justify-center gap-2 p-2.5 rounded-md border transition-colors',
+                feedType === 'url'
+                  ? 'bg-accent text-white border-accent'
+                  : 'bg-bg-secondary text-text-primary border-border hover:bg-bg-tertiary',
+              ]"
+            >
+              <PhRss :size="18" />
+              {{ t('rssUrl') }}
+            </button>
+            <button
+              type="button"
+              @click="feedType = 'script'"
+              :class="[
+                'flex-1 flex items-center justify-center gap-2 p-2.5 rounded-md border transition-colors',
+                feedType === 'script'
+                  ? 'bg-accent text-white border-accent'
+                  : 'bg-bg-secondary text-text-primary border-border hover:bg-bg-tertiary',
+              ]"
+            >
+              <PhCode :size="18" />
+              {{ t('customScript') }}
+            </button>
+          </div>
+        </div>
+
         <div class="mb-4">
           <label class="block mb-1.5 font-semibold text-sm text-text-secondary">{{
             t('title')
           }}</label>
           <input v-model="title" type="text" class="input-field" />
         </div>
-        <div class="mb-4">
+
+        <!-- URL Input (when URL type is selected) -->
+        <div v-if="feedType === 'url'" class="mb-4">
           <label class="block mb-1.5 font-semibold text-sm text-text-secondary">{{
             t('rssUrl')
           }}</label>
           <input v-model="url" type="text" class="input-field" />
         </div>
+
+        <!-- Script Selection (when Script type is selected) -->
+        <div v-else class="mb-4">
+          <label class="block mb-1.5 font-semibold text-sm text-text-secondary">{{
+            t('selectScript')
+          }}</label>
+          <div v-if="availableScripts.length > 0" class="mb-2">
+            <select v-model="scriptPath" class="input-field">
+              <option value="">{{ t('selectScriptPlaceholder') }}</option>
+              <option v-for="script in availableScripts" :key="script.path" :value="script.path">
+                {{ script.name }} ({{ script.type }})
+              </option>
+            </select>
+          </div>
+          <div
+            v-else
+            class="text-sm text-text-secondary bg-bg-secondary rounded-md p-3 border border-border"
+          >
+            <p class="mb-2">{{ t('noScriptsFound') }}</p>
+          </div>
+          <button
+            type="button"
+            @click="openScriptsFolder"
+            class="text-sm text-accent hover:underline flex items-center gap-1 mt-2"
+          >
+            <PhCode :size="14" />
+            {{ t('openScriptsFolder') }}
+          </button>
+          <p class="text-xs text-text-secondary mt-2">
+            {{ t('scriptHelp') }}
+          </p>
+        </div>
+
         <div class="mb-4">
           <label class="block mb-1.5 font-semibold text-sm text-text-secondary">{{
             t('category')
@@ -104,7 +230,7 @@ async function save() {
         </div>
       </div>
       <div class="p-5 border-t border-border bg-bg-secondary text-right">
-        <button @click="save" :disabled="isSubmitting" class="btn-primary">
+        <button @click="save" :disabled="isSubmitting || !isFormValid" class="btn-primary">
           {{ isSubmitting ? t('saving') : t('saveChanges') }}
         </button>
       </div>
