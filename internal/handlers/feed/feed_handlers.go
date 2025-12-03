@@ -48,12 +48,17 @@ func HandleAddFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update hide_from_timeline if set
-	if req.HideFromTimeline {
-		feed, err := h.DB.GetFeedByID(feedID)
-		if err == nil {
-			h.DB.UpdateFeed(feed.ID, feed.Title, feed.URL, feed.Category, feed.ScriptPath, req.HideFromTimeline)
-		}
+	// Update hide_from_timeline setting (always update, not just when true)
+	feed, err := h.DB.GetFeedByID(feedID)
+	if err != nil {
+		// Log the error but don't fail the request - feed was created successfully
+		// The hide_from_timeline can be set later via edit
+		http.Error(w, "feed created but failed to update settings: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := h.DB.UpdateFeed(feed.ID, feed.Title, feed.URL, feed.Category, feed.ScriptPath, req.HideFromTimeline); err != nil {
+		http.Error(w, "feed created but failed to update settings: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	// Immediately fetch articles for the newly added feed in background
