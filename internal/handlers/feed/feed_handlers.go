@@ -22,10 +22,11 @@ func HandleFeeds(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 // HandleAddFeed adds a new feed subscription and immediately fetches its articles.
 func HandleAddFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		URL        string `json:"url"`
-		Category   string `json:"category"`
-		Title      string `json:"title"`
-		ScriptPath string `json:"script_path"`
+		URL              string `json:"url"`
+		Category         string `json:"category"`
+		Title            string `json:"title"`
+		ScriptPath       string `json:"script_path"`
+		HideFromTimeline bool   `json:"hide_from_timeline"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -45,6 +46,14 @@ func HandleAddFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	// Update hide_from_timeline if set
+	if req.HideFromTimeline {
+		feed, err := h.DB.GetFeedByID(feedID)
+		if err == nil {
+			h.DB.UpdateFeed(feed.ID, feed.Title, feed.URL, feed.Category, feed.ScriptPath, req.HideFromTimeline)
+		}
 	}
 
 	// Immediately fetch articles for the newly added feed in background
@@ -73,18 +82,19 @@ func HandleDeleteFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 // HandleUpdateFeed updates a feed's properties.
 func HandleUpdateFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		ID         int64  `json:"id"`
-		Title      string `json:"title"`
-		URL        string `json:"url"`
-		Category   string `json:"category"`
-		ScriptPath string `json:"script_path"`
+		ID               int64  `json:"id"`
+		Title            string `json:"title"`
+		URL              string `json:"url"`
+		Category         string `json:"category"`
+		ScriptPath       string `json:"script_path"`
+		HideFromTimeline bool   `json:"hide_from_timeline"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := h.DB.UpdateFeed(req.ID, req.Title, req.URL, req.Category, req.ScriptPath); err != nil {
+	if err := h.DB.UpdateFeed(req.ID, req.Title, req.URL, req.Category, req.ScriptPath, req.HideFromTimeline); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
