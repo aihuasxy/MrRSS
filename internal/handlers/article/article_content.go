@@ -10,6 +10,7 @@ import (
 
 	"MrRSS/internal/handlers/core"
 	"MrRSS/internal/models"
+	"MrRSS/internal/utils"
 )
 
 // HandleGetArticleContent fetches the article content from RSS feed dynamically.
@@ -77,10 +78,10 @@ func HandleGetArticleContent(h *core.Handler, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Find the article in the feed by URL
+	// Find the article in the feed by URL (use normalized comparison for robustness)
 	var content string
 	for _, item := range parsedFeed.Items {
-		if item.Link == article.URL {
+		if utils.URLsMatch(item.Link, article.URL) {
 			content = item.Content
 			if content == "" {
 				content = item.Description

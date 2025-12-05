@@ -9,6 +9,7 @@ import (
 
 	"MrRSS/internal/handlers/core"
 	"MrRSS/internal/summary"
+	"MrRSS/internal/utils"
 )
 
 // HandleSummarizeArticle generates a summary for an article's content.
@@ -127,9 +128,9 @@ func getArticleContent(h *core.Handler, articleID int64) (string, error) {
 		return "", err
 	}
 
-	// Find the article in the feed by URL
+	// Find the article in the feed by URL (use normalized comparison for robustness)
 	for _, item := range parsedFeed.Items {
-		if item.Link == article.URL {
+		if utils.URLsMatch(item.Link, article.URL) {
 			if item.Content != "" {
 				return item.Content, nil
 			}
