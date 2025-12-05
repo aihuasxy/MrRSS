@@ -31,6 +31,10 @@ type Defaults struct {
 	AIModel             string `json:"ai_model"`
 	SummaryEnabled      bool   `json:"summary_enabled"`
 	SummaryLength       string `json:"summary_length"`
+	SummaryProvider     string `json:"summary_provider"`
+	SummaryAIAPIKey     string `json:"summary_ai_api_key"`
+	SummaryAIEndpoint   string `json:"summary_ai_endpoint"`
+	SummaryAIModel      string `json:"summary_ai_model"`
 	AutoCleanupEnabled  bool   `json:"auto_cleanup_enabled"`
 	MaxCacheSizeMB      int    `json:"max_cache_size_mb"`
 	MaxArticleAgeDays   int    `json:"max_article_age_days"`
@@ -89,6 +93,14 @@ func GetString(key string) string {
 		return strconv.FormatBool(defaults.SummaryEnabled)
 	case "summary_length":
 		return defaults.SummaryLength
+	case "summary_provider":
+		return defaults.SummaryProvider
+	case "summary_ai_api_key":
+		return defaults.SummaryAIAPIKey
+	case "summary_ai_endpoint":
+		return defaults.SummaryAIEndpoint
+	case "summary_ai_model":
+		return defaults.SummaryAIModel
 	case "auto_cleanup_enabled":
 		return strconv.FormatBool(defaults.AutoCleanupEnabled)
 	case "max_cache_size_mb":

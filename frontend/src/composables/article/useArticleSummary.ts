@@ -4,6 +4,7 @@ import type { Article } from '@/types/models';
 interface SummarySettings {
   enabled: boolean;
   length: string;
+  provider: string;
 }
 
 interface SummaryResult {
@@ -17,6 +18,7 @@ export function useArticleSummary() {
   const summarySettings = ref<SummarySettings>({
     enabled: false,
     length: 'medium',
+    provider: 'local',
   });
   const summaryCache: Ref<Map<number, SummaryResult>> = ref(new Map());
   const loadingSummaries: Ref<Set<number>> = ref(new Set());
@@ -29,6 +31,7 @@ export function useArticleSummary() {
       summarySettings.value = {
         enabled: data.summary_enabled === 'true',
         length: data.summary_length || 'medium',
+        provider: data.summary_provider || 'local',
       };
     } catch (e) {
       console.error('Error loading summary settings:', e);
@@ -97,8 +100,12 @@ export function useArticleSummary() {
   }
 
   // Update summary settings from event
-  function handleSummarySettingsChange(enabled: boolean, length: string): void {
-    summarySettings.value = { enabled, length };
+  function handleSummarySettingsChange(enabled: boolean, length: string, provider?: string): void {
+    summarySettings.value = {
+      enabled,
+      length,
+      provider: provider || summarySettings.value.provider,
+    };
     // Clear cache when settings change to regenerate with new settings
     clearSummaryCache();
   }

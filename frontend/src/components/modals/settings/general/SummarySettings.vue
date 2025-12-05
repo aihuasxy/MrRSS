@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { PhTextAlignLeft, PhTextT } from '@phosphor-icons/vue';
+import { PhTextAlignLeft, PhTextT, PhPackage, PhKey, PhLink, PhRobot } from '@phosphor-icons/vue';
 import type { SettingsData } from '@/types/settings';
 
 const { t } = useI18n();
@@ -39,6 +39,80 @@ defineProps<Props>();
       v-if="settings.summary_enabled"
       class="ml-2 sm:ml-4 space-y-2 sm:space-y-3 border-l-2 border-border pl-2 sm:pl-4"
     >
+      <div class="sub-setting-item">
+        <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
+          <PhPackage :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
+          <div class="flex-1 min-w-0">
+            <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('summaryProvider') }}</div>
+            <div class="text-xs text-text-secondary hidden sm:block">
+              {{ t('summaryProviderDesc') }}
+            </div>
+          </div>
+        </div>
+        <select
+          v-model="settings.summary_provider"
+          class="input-field w-32 sm:w-48 text-xs sm:text-sm"
+        >
+          <option value="local">{{ t('localAlgorithm') }}</option>
+          <option value="ai">{{ t('aiSummary') }}</option>
+        </select>
+      </div>
+
+      <!-- AI Summary Settings -->
+      <template v-if="settings.summary_provider === 'ai'">
+        <div class="sub-setting-item">
+          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
+            <PhKey :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('summaryAiApiKey') }}</div>
+              <div class="text-xs text-text-secondary hidden sm:block">
+                {{ t('summaryAiApiKeyDesc') }}
+              </div>
+            </div>
+          </div>
+          <input
+            type="password"
+            v-model="settings.summary_ai_api_key"
+            :placeholder="t('summaryAiApiKeyPlaceholder')"
+            class="input-field w-32 sm:w-48 text-xs sm:text-sm"
+          />
+        </div>
+        <div class="sub-setting-item">
+          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
+            <PhLink :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('summaryAiEndpoint') }}</div>
+              <div class="text-xs text-text-secondary hidden sm:block">
+                {{ t('summaryAiEndpointDesc') }}
+              </div>
+            </div>
+          </div>
+          <input
+            type="text"
+            v-model="settings.summary_ai_endpoint"
+            :placeholder="t('summaryAiEndpointPlaceholder')"
+            class="input-field w-32 sm:w-48 text-xs sm:text-sm"
+          />
+        </div>
+        <div class="sub-setting-item">
+          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
+            <PhRobot :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('summaryAiModel') }}</div>
+              <div class="text-xs text-text-secondary hidden sm:block">
+                {{ t('summaryAiModelDesc') }}
+              </div>
+            </div>
+          </div>
+          <input
+            type="text"
+            v-model="settings.summary_ai_model"
+            :placeholder="t('summaryAiModelPlaceholder')"
+            class="input-field w-32 sm:w-48 text-xs sm:text-sm"
+          />
+        </div>
+      </template>
+
       <div class="sub-setting-item">
         <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
           <PhTextAlignLeft :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />

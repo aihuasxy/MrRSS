@@ -26,6 +26,10 @@ export interface SettingsData {
   rules: string;
   summary_enabled: boolean;
   summary_length: string;
+  summary_provider: string;
+  summary_ai_api_key: string;
+  summary_ai_endpoint: string;
+  summary_ai_model: string;
   [key: string]: unknown; // Allow additional properties
 }
 

@@ -22,7 +22,7 @@
 - 🌐 **Auto-Translation**: Translate article titles and content using translate service or AI
 - 🔍 **Smart Feed Discovery**: Automatically discover new feeds from friend links and related sources
 - ⭐ **Favorites & Reading Tracking**: Save articles and track read/unread status
-- 📝 **Local Article Summarization**: Generate article summaries locally using TF-IDF and TextRank algorithms
+- 📝 **Article Summarization**: Generate article summaries using local TF-IDF/TextRank algorithms or AI
 - 🎨 **Modern UI**: Clean, responsive interface with dark mode support
 - 📦 **OPML Import/Export**: Easy migration from other RSS readers
 - ⌨️ **Keyboard Shortcuts**: Boost productivity with customizable keyboard shortcuts for quick navigation and actions

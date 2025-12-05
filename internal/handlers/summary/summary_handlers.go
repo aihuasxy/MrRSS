@@ -60,9 +60,43 @@ func HandleSummarizeArticle(h *core.Handler, w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Generate summary
-	summarizer := summary.NewSummarizer()
-	result := summarizer.Summarize(content, summaryLength)
+	// Get summary provider from settings (with default)
+	provider, err := h.DB.GetSetting("summary_provider")
+	if err != nil || provider == "" {
+		provider = "local" // Default to local algorithm
+	}
+
+	var result summary.SummaryResult
+
+	if provider == "ai" {
+		// Use AI summarization
+		apiKey, err := h.DB.GetSetting("summary_ai_api_key")
+		if err != nil || apiKey == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "missing_ai_api_key",
+			})
+			return
+		}
+
+		// Get endpoint and model with fallback to defaults
+		endpoint, _ := h.DB.GetSetting("summary_ai_endpoint")
+		model, _ := h.DB.GetSetting("summary_ai_model")
+
+		aiSummarizer := summary.NewAISummarizer(apiKey, endpoint, model)
+		aiResult, err := aiSummarizer.Summarize(content, summaryLength)
+		if err != nil {
+			log.Printf("Error generating AI summary: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		result = aiResult
+	} else {
+		// Use local algorithm
+		summarizer := summary.NewSummarizer()
+		result = summarizer.Summarize(content, summaryLength)
+	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"summary":        result.Summary,
