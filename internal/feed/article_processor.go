@@ -157,18 +157,24 @@ func extractMediaThumbnail(item *gofeed.Item) string {
 	if mediaExt, ok := item.Extensions["media"]; ok {
 		if groupExts, ok := mediaExt["group"]; ok && len(groupExts) > 0 {
 			// Navigate to media:group's children
-			if thumbnailExts, ok := groupExts[0].Children["thumbnail"]; ok && len(thumbnailExts) > 0 {
-				// Get the URL from the thumbnail's attributes
-				if url, ok := thumbnailExts[0].Attrs["url"]; ok {
-					return url
+			if groupExts[0].Children != nil {
+				if thumbnailExts, ok := groupExts[0].Children["thumbnail"]; ok && len(thumbnailExts) > 0 {
+					// Get the URL from the thumbnail's attributes
+					if thumbnailExts[0].Attrs != nil {
+						if url, ok := thumbnailExts[0].Attrs["url"]; ok {
+							return url
+						}
+					}
 				}
 			}
 		}
 
 		// Also check for direct media:thumbnail (some feeds use this)
 		if thumbnailExts, ok := mediaExt["thumbnail"]; ok && len(thumbnailExts) > 0 {
-			if url, ok := thumbnailExts[0].Attrs["url"]; ok {
-				return url
+			if thumbnailExts[0].Attrs != nil {
+				if url, ok := thumbnailExts[0].Attrs["url"]; ok {
+					return url
+				}
 			}
 		}
 	}
@@ -186,8 +192,10 @@ func extractMediaTitle(item *gofeed.Item) string {
 	if mediaExt, ok := item.Extensions["media"]; ok {
 		if groupExts, ok := mediaExt["group"]; ok && len(groupExts) > 0 {
 			// Navigate to media:group's children
-			if titleExts, ok := groupExts[0].Children["title"]; ok && len(titleExts) > 0 {
-				return titleExts[0].Value
+			if groupExts[0].Children != nil {
+				if titleExts, ok := groupExts[0].Children["title"]; ok && len(titleExts) > 0 {
+					return titleExts[0].Value
+				}
 			}
 		}
 
@@ -210,8 +218,10 @@ func extractMediaDescription(item *gofeed.Item) string {
 	if mediaExt, ok := item.Extensions["media"]; ok {
 		if groupExts, ok := mediaExt["group"]; ok && len(groupExts) > 0 {
 			// Navigate to media:group's children
-			if descExts, ok := groupExts[0].Children["description"]; ok && len(descExts) > 0 {
-				return descExts[0].Value
+			if groupExts[0].Children != nil {
+				if descExts, ok := groupExts[0].Children["description"]; ok && len(descExts) > 0 {
+					return descExts[0].Value
+				}
 			}
 		}
 
