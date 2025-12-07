@@ -42,6 +42,15 @@ const en: TranslationMessages = {
     'Use mouse wheel or +/- keys to zoom • Drag to move • Ctrl+S to save • ESC to close',
   downloadImage: 'Download Image',
   viewImage: 'View Image',
+  podcastAudio: 'Podcast Audio',
+  play: 'Play',
+  pause: 'Pause',
+  downloadAudio: 'Download Audio File',
+  audioPlaybackError:
+    'Failed to play audio. The file may be unavailable or in an unsupported format.',
+  youtubeVideo: 'YouTube Video',
+  openInYouTube: 'Open in YouTube',
+  videoLoadError: 'Failed to load video. Please try opening it in YouTube.',
 
   // Context Menu
   unsubscribe: 'Unsubscribe',

@@ -11,6 +11,8 @@
   --accent-color: #007bff;
   --accent-hover: #0056b3;
   --border-color: #dee2e6;
+  --mark-bg-color: rgba(255, 220, 100, 0.4);
+  --table-stripe-color: rgba(0, 0, 0, 0.02);
 }
 
 .dark-mode {
@@ -22,6 +24,8 @@
   --accent-color: #4daafc;
   --accent-hover: #2b87d9;
   --border-color: #3e3e42;
+  --mark-bg-color: rgba(255, 220, 100, 0.25);
+  --table-stripe-color: rgba(255, 255, 255, 0.02);
 }
 
 body {

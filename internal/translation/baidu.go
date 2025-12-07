@@ -72,8 +72,8 @@ func (t *BaiduTranslator) Translate(text, targetLang string) (string, error) {
 	}
 
 	var result struct {
-		ErrorCode string `json:"error_code"`
-		ErrorMsg  string `json:"error_msg"`
+		ErrorCode   string `json:"error_code"`
+		ErrorMsg    string `json:"error_msg"`
 		TransResult []struct {
 			Src string `json:"src"`
 			Dst string `json:"dst"`

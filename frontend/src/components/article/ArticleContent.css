@@ -1,69 +1,239 @@
+/* Import KaTeX styles for math rendering */
+@import 'katex/dist/katex.min.css';
+
 /* Prose styling for article content */
 .prose {
   color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1.75;
 }
-.prose :deep(h1),
-.prose :deep(h2),
-.prose :deep(h3),
-.prose :deep(h4),
-.prose :deep(h5),
-.prose :deep(h6) {
+
+/* Enhanced heading typography with proper hierarchy */
+.prose h1 {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 2.25em;
+  line-height: 1.3;
+  margin-top: 0;
+  margin-bottom: 0.8888889em;
+  letter-spacing: -0.025em;
+}
+
+.prose h2 {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 1.875em;
+  line-height: 1.3333333;
+  margin-top: 2em;
+  margin-bottom: 1em;
+  letter-spacing: -0.02em;
+}
+
+.prose h3 {
   color: var(--text-primary);
   font-weight: 600;
+  font-size: 1.5em;
+  line-height: 1.4;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  letter-spacing: -0.01em;
+}
+
+.prose h4 {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1.25em;
+  line-height: 1.5;
   margin-top: 1.5em;
-  margin-bottom: 0.75em;
-}
-.prose :deep(p) {
-  margin-bottom: 1em;
-  line-height: 1.7;
-}
-.prose :deep(a) {
-  color: var(--accent-color);
-  text-decoration: underline;
-  cursor: pointer;
-}
-.prose :deep(img) {
-  max-width: 100%;
-  height: auto;
-  border-radius: 0.5rem;
-  margin: 1.5em 0;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.prose :deep(img:hover) {
-  opacity: 0.9;
-}
-.prose :deep(pre) {
-  background-color: var(--bg-secondary);
-  padding: 1em;
-  border-radius: 0.5rem;
-  overflow-x: auto;
-  margin: 1em 0;
-}
-.prose :deep(code) {
-  background-color: var(--bg-secondary);
-  padding: 0.2em 0.4em;
-  border-radius: 0.25rem;
-  font-size: 0.9em;
-}
-.prose :deep(blockquote) {
-  border-left: 4px solid var(--accent-color);
-  padding-left: 1em;
-  margin: 1em 0;
-  font-style: italic;
-  color: var(--text-secondary);
-}
-.prose :deep(ul),
-.prose :deep(ol) {
-  margin: 1em 0;
-  padding-left: 2em;
-}
-.prose :deep(li) {
   margin-bottom: 0.5em;
 }
 
+.prose h5 {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1.125em;
+  line-height: 1.5555556;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1em;
+  line-height: 1.6;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  line-height: 1.75;
+}
+
+.prose p:first-child {
+  margin-top: 0;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+.prose a {
+  color: var(--accent-color);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.prose a:hover {
+  color: var(--accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+.prose a:visited {
+  color: var(--accent-color);
+  opacity: 0.8;
+}
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 2em 0;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  display: block;
+}
+
+.prose img:hover {
+  opacity: 0.95;
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.prose pre {
+  background-color: var(--bg-secondary);
+  padding: 1.25em 1.5em;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1.5em 0;
+  border: 1px solid var(--border-color);
+  font-size: 0.875em;
+  line-height: 1.7142857;
+}
+
+.prose pre code {
+  background-color: transparent;
+  border-width: 0;
+  border-radius: 0;
+  padding: 0;
+  font-weight: inherit;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+}
+
+.prose code {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+}
+.prose blockquote {
+  border-left: 4px solid var(--accent-color);
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+  padding-top: 0.75em;
+  padding-bottom: 0.75em;
+  margin: 1.6em 0;
+  font-style: italic;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  border-radius: 0 0.375rem 0.375rem 0;
+  quotes: '\201C' '\201D' '\2018' '\2019';
+}
+
+.prose blockquote p:first-of-type::before {
+  content: open-quote;
+}
+
+.prose blockquote p:last-of-type::after {
+  content: close-quote;
+}
+
+.prose blockquote p {
+  margin: 0;
+}
+
+.prose blockquote p + p {
+  margin-top: 1em;
+}
+.prose ul,
+.prose ol {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose ul {
+  list-style-type: disc;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
+.prose ul ul,
+.prose ul ol,
+.prose ol ul,
+.prose ol ol {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.75;
+}
+
+.prose li p {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.prose li > *:first-child {
+  margin-top: 1.25em;
+}
+
+.prose li > *:last-child {
+  margin-bottom: 1.25em;
+}
+
+.prose ul > li::marker {
+  color: var(--text-secondary);
+}
+
+.prose ol > li::marker {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
 /* Translation text styling - lighter color */
-.prose :deep(.translation-text) {
+.prose .translation-text {
   color: var(--text-secondary);
   opacity: 0.85;
   margin-top: 0.25em;
@@ -73,7 +243,7 @@
 }
 
 /* Blockquote translation preserves blockquote style */
-.prose :deep(blockquote.translation-text) {
+.prose blockquote.translation-text {
   border-left: 4px solid var(--accent-color);
   padding-left: 1em;
   font-style: italic;
@@ -82,7 +252,7 @@
 }
 
 /* Audio player styling - podcast support */
-.prose :deep(audio) {
+.prose audio {
   width: 100%;
   max-width: 100%;
   min-height: 54px;
@@ -93,8 +263,8 @@
 }
 
 /* Audio container for enhanced podcast display */
-.prose :deep(.audio-container),
-.prose :deep(.podcast-player) {
+.prose .audio-container,
+.prose .podcast-player {
   display: flex;
   flex-direction: column;
   gap: 0.75em;
@@ -106,7 +276,7 @@
 }
 
 /* Video player styling */
-.prose :deep(video) {
+.prose video {
   width: 100%;
   max-width: 100%;
   height: auto;
@@ -119,8 +289,8 @@
 }
 
 /* Video container for enhanced display */
-.prose :deep(.video-container),
-.prose :deep(.video-wrapper) {
+.prose .video-container,
+.prose .video-wrapper {
   position: relative;
   width: 100%;
   margin: 1.5em 0;
@@ -132,15 +302,15 @@
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.prose :deep(.video-container video),
-.prose :deep(.video-wrapper video) {
+.prose .video-container video,
+.prose .video-wrapper video {
   margin: 0;
   border-radius: 0;
   box-shadow: none;
 }
 
 /* Iframe for embedded videos (YouTube, Vimeo, etc.) */
-.prose :deep(iframe) {
+.prose iframe {
   width: 100%;
   max-width: 100%;
   aspect-ratio: 16 / 9;
@@ -154,9 +324,9 @@
 }
 
 /* Responsive iframe container */
-.prose :deep(.iframe-container),
-.prose :deep(.embed-container),
-.prose :deep(.video-embed) {
+.prose .iframe-container,
+.prose .embed-container,
+.prose .video-embed {
   position: relative;
   width: 100%;
   padding-bottom: 56.25%; /* 16:9 aspect ratio */
@@ -169,9 +339,9 @@
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.prose :deep(.iframe-container iframe),
-.prose :deep(.embed-container iframe),
-.prose :deep(.video-embed iframe) {
+.prose .iframe-container iframe,
+.prose .embed-container iframe,
+.prose .video-embed iframe {
   position: absolute;
   top: 0;
   left: 0;
@@ -182,22 +352,28 @@
   box-shadow: none;
 }
 
-/* Figure and figcaption styling for media */
-.prose :deep(figure) {
-  margin: 1.5em 0;
+/* Enhanced figure and figcaption styling for media */
+.prose figure {
+  margin: 2em 0;
 }
 
-.prose :deep(figcaption) {
+.prose figure > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.prose figcaption {
   font-size: 0.875em;
   color: var(--text-secondary);
   text-align: center;
-  margin-top: 0.75em;
+  margin-top: 0.875em;
   padding: 0 0.5em;
-  line-height: 1.5;
+  line-height: 1.5714286;
+  font-style: italic;
 }
 
 /* Enclosure media container styling (RSS media enclosures) */
-.prose :deep(.media-enclosure) {
+.prose .media-enclosure {
   margin: 1.5em 0;
   padding: 1em;
   background-color: var(--bg-secondary);
@@ -205,48 +381,353 @@
   border: 1px solid var(--border-color);
 }
 
-/* Table styling for better rich text */
-.prose :deep(table) {
+/* Enhanced table styling with better visual design */
+.prose table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.5em 0;
-  font-size: 0.9em;
-}
-
-.prose :deep(th),
-.prose :deep(td) {
-  padding: 0.75em;
+  margin: 2em 0;
+  font-size: 0.875em;
+  line-height: 1.7142857;
   border: 1px solid var(--border-color);
-  text-align: left;
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
-.prose :deep(th) {
+.prose thead {
+  border-bottom: 2px solid var(--border-color);
+}
+
+.prose th {
   background-color: var(--bg-secondary);
   font-weight: 600;
+  color: var(--text-primary);
+  padding: 0.875em 1em;
+  text-align: left;
+  border-right: 1px solid var(--border-color);
+  vertical-align: bottom;
 }
 
-.prose :deep(tr:nth-child(even)) {
+.prose th:last-child {
+  border-right: none;
+}
+
+.prose td {
+  padding: 0.875em 1em;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose td:last-child {
+  border-right: none;
+}
+
+.prose tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.prose tbody tr:hover {
   background-color: var(--bg-secondary);
+  transition: background-color 0.2s ease;
 }
 
-/* Horizontal rule styling */
-.prose :deep(hr) {
+.prose tbody tr:nth-child(odd) {
+  background-color: var(--table-stripe-color);
+}
+
+/* Enhanced horizontal rule styling */
+.prose hr {
   border: none;
   border-top: 1px solid var(--border-color);
-  margin: 2em 0;
+  margin: 3em 0;
+  height: 0;
 }
 
-/* Definition list styling */
-.prose :deep(dl) {
-  margin: 1em 0;
+/* Enhanced definition list styling */
+.prose dl {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
 }
 
-.prose :deep(dt) {
+.prose dt {
   font-weight: 600;
-  margin-top: 0.5em;
+  margin-top: 1.25em;
+  color: var(--text-primary);
 }
 
-.prose :deep(dd) {
-  margin-left: 1.5em;
+.prose dd {
+  margin-top: 0.5em;
+  margin-left: 1.625em;
+  padding-left: 1.625em;
   color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+/* Strong and emphasis styling */
+.prose strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+/* Kbd (keyboard key) styling */
+.prose kbd {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: 0.875em;
+  font-weight: 500;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  padding: 0.125em 0.375em;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Mark (highlighted text) styling */
+.prose mark {
+  background-color: var(--mark-bg-color);
+  color: var(--text-primary);
+  padding: 0.125em 0.25em;
+  border-radius: 0.125rem;
+}
+
+/* Abbreviation styling */
+.prose abbr[title] {
+  text-decoration: underline dotted;
+  cursor: help;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* Subscript and superscript styling */
+.prose sub,
+.prose sup {
+  font-size: 0.75em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.prose sup {
+  top: -0.5em;
+}
+
+.prose sub {
+  bottom: -0.25em;
+}
+
+/* Small text styling */
+.prose small {
+  font-size: 0.875em;
+  color: var(--text-secondary);
+}
+
+/* Deleted and inserted text styling */
+.prose del {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.prose ins {
+  text-decoration: underline;
+  color: var(--text-primary);
+  background-color: rgba(16, 185, 129, 0.1);
+  padding: 0.125em 0.25em;
+  border-radius: 0.125rem;
+}
+
+/* Sample output and variable styling */
+.prose samp,
+.prose var {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: 0.875em;
+  background-color: var(--bg-secondary);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
+}
+
+/* Address and cite styling */
+.prose address {
+  font-style: normal;
+  margin: 1.25em 0;
+  padding: 1em;
+  background-color: var(--bg-secondary);
+  border-left: 4px solid var(--border-color);
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.prose cite {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* Details and summary styling for collapsible sections */
+.prose details {
+  margin: 1.25em 0;
+  padding: 1em;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+}
+
+.prose summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  -webkit-user-select: none;
+  user-select: none;
+  padding: 0.5em;
+  margin: -0.5em;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease;
+}
+
+.prose summary:hover {
+  background-color: var(--bg-primary);
+}
+
+.prose details[open] summary {
+  margin-bottom: 1em;
+}
+
+/* Responsive adjustments for mobile devices */
+@media (max-width: 640px) {
+  .prose {
+    font-size: 0.9375rem; /* Slightly smaller base font on mobile */
+  }
+
+  .prose h1 {
+    font-size: 1.875em; /* Reduce h1 size on mobile */
+    line-height: 1.2;
+    margin-bottom: 0.75em;
+  }
+
+  .prose h2 {
+    font-size: 1.5em;
+    margin-top: 1.5em;
+  }
+
+  .prose h3 {
+    font-size: 1.25em;
+  }
+
+  .prose table {
+    font-size: 0.8125em; /* Smaller table text on mobile */
+    display: block;
+    overflow-x: auto;
+  }
+
+  .prose th,
+  .prose td {
+    padding: 0.625em 0.75em; /* Reduce padding on mobile */
+  }
+
+  .prose blockquote {
+    padding-left: 1em;
+    padding-right: 1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    margin: 1.25em 0;
+  }
+
+  .prose pre {
+    padding: 1em;
+    font-size: 0.8125em;
+    margin: 1.25em 0;
+  }
+
+  .prose img {
+    margin: 1.5em 0;
+  }
+}
+
+/* Smooth scrolling for anchor links */
+.prose a[href^='#'] {
+  scroll-behavior: smooth;
+}
+
+/* Print styles for better article printing */
+@media print {
+  .prose {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  .prose a {
+    text-decoration: underline;
+  }
+
+  .prose a[href]::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.875em;
+    color: var(--text-secondary);
+  }
+
+  .prose img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  .prose table,
+  .prose pre,
+  .prose blockquote {
+    page-break-inside: avoid;
+  }
+}
+
+/* Math formula styling with KaTeX */
+.prose .katex-display {
+  margin: 1.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+  text-align: center;
+}
+
+.prose .katex-inline {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.1em;
+}
+
+.prose .katex {
+  font-size: 1.1em;
+  color: var(--text-primary);
+}
+
+/* Ensure KaTeX respects theme colors */
+.prose .katex .katex-html {
+  color: var(--text-primary);
+}
+
+/* Math formula on mobile */
+@media (max-width: 640px) {
+  .prose .katex-display {
+    margin: 1.25em 0;
+    font-size: 0.95em;
+  }
+
+  .prose .katex {
+    font-size: 1em;
+  }
 }

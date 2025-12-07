@@ -23,6 +23,8 @@ type Article struct {
 	Title           string    `json:"title"`
 	URL             string    `json:"url"`
 	ImageURL        string    `json:"image_url"`
+	AudioURL        string    `json:"audio_url"`
+	VideoURL        string    `json:"video_url"` // YouTube video URL for embedded player
 	Content         string    `json:"content"`
 	PublishedAt     time.Time `json:"published_at"`
 	IsRead          bool      `json:"is_read"`

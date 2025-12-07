@@ -6,8 +6,11 @@ import ArticleTitle from './parts/ArticleTitle.vue';
 import ArticleSummary from './parts/ArticleSummary.vue';
 import ArticleLoading from './parts/ArticleLoading.vue';
 import ArticleBody from './parts/ArticleBody.vue';
+import AudioPlayer from './parts/AudioPlayer.vue';
+import VideoPlayer from './parts/VideoPlayer.vue';
 import { useArticleSummary } from '@/composables/article/useArticleSummary';
 import { useArticleTranslation } from '@/composables/article/useArticleTranslation';
+import { useArticleRendering } from '@/composables/article/useArticleRendering';
 import './ArticleContent.css';
 
 interface SummaryResult {
@@ -36,6 +39,9 @@ const {
 } = useArticleSummary();
 
 const { translationSettings, loadTranslationSettings } = useArticleTranslation();
+
+// Use composable for enhanced rendering (math formulas, etc.)
+const { enhanceRendering } = useArticleRendering();
 
 // Computed properties for easier access
 const summaryEnabled = computed(() => summarySettings.value.enabled);
@@ -160,8 +166,61 @@ async function translateContentParagraphs(content: string) {
     // Skip if already has translation sibling
     if (htmlEl.nextElementSibling?.classList.contains('translation-text')) continue;
 
+    // Skip technical content that should not be translated:
+    // - Code blocks (pre, code)
+    // - Keyboard input (kbd)
+    // - Math formulas (katex)
+    // - Elements with specific classes
+    if (
+      htmlEl.closest('pre') ||
+      htmlEl.closest('code') ||
+      htmlEl.closest('kbd') ||
+      htmlEl.closest('.katex') ||
+      htmlEl.closest('.katex-display') ||
+      htmlEl.closest('.katex-inline') ||
+      htmlEl.classList.contains('katex') ||
+      htmlEl.classList.contains('katex-display') ||
+      htmlEl.classList.contains('katex-inline')
+    ) {
+      continue;
+    }
+
     // Get the visible text content for translation
-    const visibleText = htmlEl.textContent?.trim() || '';
+    // For elements containing code/kbd/math inline, extract only translatable text
+    let visibleText = '';
+
+    // Check if element contains technical elements
+    const hasTechnicalContent = htmlEl.querySelector('code, kbd, .katex, .katex-inline');
+
+    if (hasTechnicalContent) {
+      // Extract only text nodes, skipping technical elements
+      const textNodes: string[] = [];
+      const walker = document.createTreeWalker(htmlEl, NodeFilter.SHOW_TEXT, {
+        acceptNode: (node) => {
+          const parent = node.parentElement;
+          if (
+            parent?.tagName === 'CODE' ||
+            parent?.tagName === 'KBD' ||
+            parent?.classList.contains('katex') ||
+            parent?.classList.contains('katex-inline')
+          ) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+
+      let node;
+      while ((node = walker.nextNode())) {
+        const text = node.textContent?.trim();
+        if (text) textNodes.push(text);
+      }
+
+      visibleText = textNodes.join(' ').trim();
+    } else {
+      visibleText = htmlEl.textContent?.trim() || '';
+    }
+
     if (!visibleText || visibleText.length < 2) continue;
 
     // Translate the visible text
@@ -216,6 +275,11 @@ watch(
   () => props.isLoadingContent,
   (isLoading, wasLoading) => {
     if (wasLoading && !isLoading && props.article) {
+      // Enhance rendering first (math formulas, etc.)
+      nextTick(() => {
+        enhanceRendering('.prose-content');
+      });
+
       if (summaryEnabled.value) {
         generateSummary(props.article);
       }
@@ -229,6 +293,12 @@ watch(
 onMounted(async () => {
   await loadSettings();
   if (props.article) {
+    // Enhance rendering if content is already loaded
+    if (props.articleContent && !props.isLoadingContent) {
+      await nextTick();
+      enhanceRendering('.prose-content');
+    }
+
     if (summaryEnabled.value && props.articleContent) {
       generateSummary(props.article);
     }
@@ -252,6 +322,20 @@ onMounted(async () => {
         :translation-enabled="translationEnabled"
       />
 
+      <!-- Audio Player (if article has audio) -->
+      <AudioPlayer
+        v-if="article.audio_url"
+        :audio-url="article.audio_url"
+        :article-title="article.title"
+      />
+
+      <!-- Video Player (if article has video) -->
+      <VideoPlayer
+        v-if="article.video_url"
+        :video-url="article.video_url"
+        :article-title="article.title"
+      />
+
       <ArticleSummary
         :summary-result="summaryResult"
         :is-loading-summary="isLoadingSummary"
@@ -266,6 +350,7 @@ onMounted(async () => {
         v-else
         :article-content="articleContent"
         :is-translating-content="isTranslatingContent"
+        :has-media-content="!!(article.audio_url || article.video_url)"
       />
     </div>
   </div>

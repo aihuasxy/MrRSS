@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhSpinnerGap } from '@phosphor-icons/vue';
+import { PhSpinnerGap, PhArticle } from '@phosphor-icons/vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -7,9 +7,12 @@ const { t } = useI18n();
 interface Props {
   articleContent: string;
   isTranslatingContent: boolean;
+  hasMediaContent?: boolean; // Whether article has audio/video content
 }
 
-defineProps<Props>();
+withDefaults(defineProps<Props>(), {
+  hasMediaContent: false,
+});
 </script>
 
 <template>
@@ -26,8 +29,8 @@ defineProps<Props>();
     </div>
   </div>
 
-  <!-- No content available -->
-  <div v-else class="text-center text-text-secondary py-6 sm:py-8">
+  <!-- No content available (only show if there's no media content either) -->
+  <div v-else-if="!hasMediaContent" class="text-center text-text-secondary py-6 sm:py-8">
     <PhArticle :size="48" class="mb-2 sm:mb-3 opacity-50 mx-auto sm:w-16 sm:h-16" />
     <p class="text-sm sm:text-base">{{ t('noContentAvailable') }}</p>
   </div>
