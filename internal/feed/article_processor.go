@@ -10,6 +10,26 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
+// ExtractContent extracts content from an RSS item with the correct priority order.
+// Priority: media:description > item.Content (content:encoded) > item.Description
+// This ensures full article content is preferred over summaries.
+// This is exported so it can be used by other packages for consistent content extraction.
+func ExtractContent(item *gofeed.Item) string {
+	// First, try media:description (for YouTube and similar Media RSS feeds)
+	mediaDescription := extractMediaDescription(item)
+	if mediaDescription != "" {
+		return mediaDescription
+	}
+
+	// Second, try item.Content (populated from content:encoded or <content>)
+	if item.Content != "" {
+		return item.Content
+	}
+
+	// Finally, fall back to item.Description (usually a summary)
+	return item.Description
+}
+
 // processArticles processes RSS feed items and converts them to Article models
 func (f *Fetcher) processArticles(feed models.Feed, items []*gofeed.Item) []*models.Article {
 	// Check translation settings
@@ -31,16 +51,9 @@ func (f *Fetcher) processArticles(feed models.Feed, items []*gofeed.Item) []*mod
 
 		// Extract Media RSS content (YouTube feeds)
 		mediaTitle := extractMediaTitle(item)
-		mediaDescription := extractMediaDescription(item)
 
-		// Extract content from RSS item (prefer media:description, then Content, then Description)
-		content := mediaDescription
-		if content == "" {
-			content = item.Content
-		}
-		if content == "" {
-			content = item.Description
-		}
+		// Extract content from RSS item using centralized extraction logic
+		content := ExtractContent(item)
 
 		// Clean HTML to fix malformed tags that can cause rendering issues
 		content = utils.CleanHTML(content)

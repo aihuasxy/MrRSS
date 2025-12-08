@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"MrRSS/internal/feed"
 	"MrRSS/internal/handlers/core"
 	"MrRSS/internal/models"
 	"MrRSS/internal/utils"
@@ -82,10 +83,8 @@ func HandleGetArticleContent(h *core.Handler, w http.ResponseWriter, r *http.Req
 	var content string
 	for _, item := range parsedFeed.Items {
 		if utils.URLsMatch(item.Link, article.URL) {
-			content = item.Content
-			if content == "" {
-				content = item.Description
-			}
+			// Use the centralized content extraction logic to ensure consistency
+			content = feed.ExtractContent(item)
 			// Clean HTML to fix malformed tags that can cause rendering issues
 			content = utils.CleanHTML(content)
 			break
