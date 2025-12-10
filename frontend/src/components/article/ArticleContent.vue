@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { BrowserOpenURL } from '@/wailsjs/wailsjs/runtime/runtime';
 import type { Article } from '@/types/models';
 import ArticleTitle from './parts/ArticleTitle.vue';
 import ArticleSummary from './parts/ArticleSummary.vue';
@@ -276,6 +277,17 @@ async function translateContentParagraphs(content: string) {
   proseContainer.querySelectorAll('.translation-text').forEach((el) => {
     renderMathFormulas(el as HTMLElement);
     highlightCodeBlocks(el as HTMLElement);
+
+    // Attach event listeners to links in translated text
+    el.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', (e: Event) => {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        if (href) {
+          BrowserOpenURL(href);
+        }
+      });
+    });
   });
 
   isTranslatingContent.value = false;

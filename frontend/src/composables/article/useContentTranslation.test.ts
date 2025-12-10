@@ -84,27 +84,17 @@ describe('useContentTranslation', () => {
       expect(preservedElements[1].outerHTML).toBe('<sup>2</sup>');
     });
 
-    it('should extract text with hyperlink placeholders', () => {
+    it('should not preserve hyperlinks but include their text', () => {
       container.innerHTML = '<p>Visit <a href="https://example.com">this link</a> for more</p>';
       const p = container.querySelector('p') as HTMLElement;
 
       const { text, preservedElements } = extractTextWithPlaceholders(p);
 
-      expect(text).toContain('⟦0⟧');
-      expect(preservedElements).toHaveLength(1);
-      expect(preservedElements[0].outerHTML).toContain('<a href="https://example.com">');
-    });
-
-    it('should extract text with multiple hyperlinks', () => {
-      container.innerHTML =
-        '<p>Visit <a href="https://example.com">link1</a> and <a href="https://test.com">link2</a></p>';
-      const p = container.querySelector('p') as HTMLElement;
-
-      const { text, preservedElements } = extractTextWithPlaceholders(p);
-
-      expect(text).toContain('⟦0⟧');
-      expect(text).toContain('⟦1⟧');
-      expect(preservedElements).toHaveLength(2);
+      // Hyperlinks are not preserved, so their text should be included in the translatable text
+      expect(text).toContain('this link');
+      expect(text).not.toContain('⟦');
+      // No preserved elements for hyperlinks
+      expect(preservedElements).toHaveLength(0);
     });
   });
 

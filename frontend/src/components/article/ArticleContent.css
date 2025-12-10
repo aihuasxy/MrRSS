@@ -191,18 +191,6 @@
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Remove wrapping links from images to prevent navigation on click */
-.prose a:has(img) {
-  cursor: default;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.prose a:has(img):hover {
-  opacity: 1;
-  text-decoration: none;
-}
-
 /* Only treat very small images as inline (emojis, icons) */
 /* Emoji-sized images (height <= 24px) */
 .prose img[height='16'],

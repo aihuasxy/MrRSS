@@ -163,42 +163,22 @@ export function useArticleDetail() {
 
   // Attach event listeners to links and images in rendered content
   function attachContentEventListeners() {
-    // Unwrap images from anchor tags to prevent navigation conflicts
-    const imagesInLinks = document.querySelectorAll<HTMLImageElement>('.prose a img');
-    imagesInLinks.forEach((img) => {
-      const anchor = img.closest('a');
-      if (anchor && anchor.parentNode) {
-        // Replace the anchor with just the image
-        anchor.parentNode.insertBefore(img, anchor);
-        anchor.remove();
-      }
-    });
-
-    // Handle all links - open in default browser
-    const links = document.querySelectorAll('.prose a');
-    links.forEach((link) => {
-      link.addEventListener('click', (e: Event) => {
-        e.preventDefault();
-        const href = link.getAttribute('href');
-        if (href) {
-          BrowserOpenURL(href);
-        }
-      });
-    });
-
     // Handle all images - make them clickable for zoom/pan and add context menu
+    // Do this BEFORE unwrapping from links
     const images = document.querySelectorAll<HTMLImageElement>('.prose img');
     images.forEach((img) => {
       img.style.cursor = 'pointer';
       // Left click - open image viewer
       img.addEventListener('click', (e: Event) => {
         e.preventDefault();
+        e.stopPropagation(); // Prevent link navigation if image is in a link
         imageViewerSrc.value = img.src;
         imageViewerAlt.value = img.alt || '';
       });
       // Right click - show context menu for saving
       img.addEventListener('contextmenu', (e: MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation(); // Prevent default context menu
         // Use global context menu system
         window.dispatchEvent(
           new CustomEvent('open-context-menu', {
@@ -229,6 +209,29 @@ export function useArticleDetail() {
             },
           })
         );
+      });
+    });
+
+    // Unwrap images from anchor tags to prevent navigation conflicts
+    const imagesInLinks = document.querySelectorAll<HTMLImageElement>('.prose a img');
+    imagesInLinks.forEach((img) => {
+      const anchor = img.closest('a');
+      if (anchor && anchor.parentNode) {
+        // Replace the anchor with just the image
+        anchor.parentNode.insertBefore(img, anchor);
+        anchor.remove();
+      }
+    });
+
+    // Handle all links - open in default browser
+    const links = document.querySelectorAll('.prose a');
+    links.forEach((link) => {
+      link.addEventListener('click', (e: Event) => {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        if (href) {
+          BrowserOpenURL(href);
+        }
       });
     });
   }
