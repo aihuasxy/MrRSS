@@ -17,7 +17,11 @@ export function getProxiedMediaUrl(url: string, referer?: string): string {
   }
 
   // Don't proxy local URLs
-  if (url.startsWith('/') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
+  if (
+    url.startsWith('/') ||
+    url.startsWith('http://localhost') ||
+    url.startsWith('http://127.0.0.1')
+  ) {
     return url;
   }
 

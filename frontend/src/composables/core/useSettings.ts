@@ -24,6 +24,9 @@ export function useSettings() {
     last_article_update: settingsDefaults.last_article_update,
     show_hidden_articles: settingsDefaults.show_hidden_articles,
     default_view_mode: settingsDefaults.default_view_mode,
+    media_cache_enabled: settingsDefaults.media_cache_enabled,
+    media_cache_max_size_mb: settingsDefaults.media_cache_max_size_mb,
+    media_cache_max_age_days: settingsDefaults.media_cache_max_age_days,
     startup_on_boot: settingsDefaults.startup_on_boot,
     shortcuts: settingsDefaults.shortcuts,
     rules: settingsDefaults.rules,
@@ -65,6 +68,11 @@ export function useSettings() {
         last_article_update: data.last_article_update || settingsDefaults.last_article_update,
         show_hidden_articles: data.show_hidden_articles === 'true',
         default_view_mode: data.default_view_mode || settingsDefaults.default_view_mode,
+        media_cache_enabled: data.media_cache_enabled === 'true',
+        media_cache_max_size_mb:
+          parseInt(data.media_cache_max_size_mb) || settingsDefaults.media_cache_max_size_mb,
+        media_cache_max_age_days:
+          parseInt(data.media_cache_max_age_days) || settingsDefaults.media_cache_max_age_days,
         startup_on_boot: data.startup_on_boot === 'true',
         shortcuts: data.shortcuts || settingsDefaults.shortcuts,
         rules: data.rules || settingsDefaults.rules,

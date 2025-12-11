@@ -101,6 +101,15 @@ export function useSettingsAutoSave(settings: Ref<SettingsData>) {
             settings.value.show_hidden_articles ?? settingsDefaults.show_hidden_articles
           ).toString(),
           default_view_mode: settings.value.default_view_mode ?? settingsDefaults.default_view_mode,
+          media_cache_enabled: (
+            settings.value.media_cache_enabled ?? settingsDefaults.media_cache_enabled
+          ).toString(),
+          media_cache_max_size_mb: (
+            settings.value.media_cache_max_size_mb ?? settingsDefaults.media_cache_max_size_mb
+          ).toString(),
+          media_cache_max_age_days: (
+            settings.value.media_cache_max_age_days ?? settingsDefaults.media_cache_max_age_days
+          ).toString(),
           startup_on_boot: (
             settings.value.startup_on_boot ?? settingsDefaults.startup_on_boot
           ).toString(),

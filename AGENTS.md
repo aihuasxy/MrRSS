@@ -170,6 +170,21 @@ When updating version, modify ALL of these files:
 9. `README_zh.md` - Version badge
 10. `CHANGELOG.md` - Add new version entry
 
+### Settings Management (CRITICAL)
+
+⚠️ **This is the #1 source of bugs!** When adding/modifying/deleting a setting, you MUST update ALL 8 locations:
+
+1. **Default Values** (2 files): `config/defaults.json` + `internal/config/defaults.json`
+2. **Backend Type**: `internal/config/config.go` (struct + switch case)
+3. **Database Init**: `internal/database/db.go` (settingsKeys array)
+4. **API Handler**: `internal/handlers/settings/settings_handlers.go` (GET + POST, 4 places)
+5. **Frontend Type**: `frontend/src/types/settings.ts`
+6. **Settings Composable**: `frontend/src/composables/core/useSettings.ts` (2 places)
+7. **Auto-Save**: `frontend/src/composables/core/useSettingsAutoSave.ts`
+8. **UI Component**: `frontend/src/components/modals/settings/` (if user-facing)
+
+📚 **Complete Guide**: See [CODE_PATTERNS.md](docs/CODE_PATTERNS.md#settings-management)
+
 ## Coding Standards
 
 ### Go Standards

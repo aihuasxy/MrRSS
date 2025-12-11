@@ -25,6 +25,9 @@
   "auto_cleanup_enabled": false,
   "max_cache_size_mb": 20,
   "max_article_age_days": 30,
+  "media_cache_enabled": false,
+  "media_cache_max_size_mb": 100,
+  "media_cache_max_age_days": 7,
   "shortcuts": "",
   "rules": "",
   "last_article_update": ""

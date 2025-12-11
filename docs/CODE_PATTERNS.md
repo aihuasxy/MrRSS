@@ -45,9 +45,11 @@ This ensures the application can be properly packaged and distributed.
 
 ## Settings Management
 
-### Adding a New Setting
+**⚠️ CRITICAL**: This is the #1 source of bugs in MrRSS. Missing even ONE location will cause silent failures!
 
-When adding/modifying/deleting a setting, update **ALL** of these files:
+### Complete Checklist for Adding/Modifying a Setting
+
+When adding/modifying/deleting a setting, update **ALL 8** of these locations (not 7, not 6 - ALL 8!):
 
 #### 1. **Default Values** (2 files)
 - `config/defaults.json` - Shared defaults (frontend reads this)
@@ -160,6 +162,51 @@ await fetch('/api/settings', {
 ```vue
 <input type="checkbox" v-model="settings.new_feature_enabled" />
 ```
+
+### Verification After Making Changes
+
+**ALWAYS verify ALL 8 locations** using these commands:
+
+```bash
+# Check if setting exists in all required files
+grep -r "new_feature_enabled" config/
+grep -r "new_feature_enabled" internal/config/
+grep -r "new_feature_enabled" internal/database/
+grep -r "new_feature_enabled" internal/handlers/settings/
+grep -r "new_feature_enabled" frontend/src/types/
+grep -r "new_feature_enabled" frontend/src/composables/core/
+```
+
+**Expected Results**:
+- `config/defaults.json` - 1 match (default value)
+- `internal/config/defaults.json` - 1 match (default value)
+- `internal/config/config.go` - 2 matches (struct field + switch case)
+- `internal/database/db.go` - 1 match (settingsKeys array)
+- `internal/handlers/settings/settings_handlers.go` - 4 matches (GET call, GET response, POST struct, POST handler)
+- `frontend/src/types/settings.ts` - 1 match (interface field)
+- `frontend/src/composables/core/useSettings.ts` - 2 matches (initial ref + fetchSettings parsing)
+- `frontend/src/composables/core/useSettingsAutoSave.ts` - 1 match (POST body)
+
+**Total: 14 matches across 8 files**
+
+If any file is missing, the setting will NOT work correctly!
+
+### Common Mistakes to Avoid
+
+❌ **DON'T**:
+- Add to backend but forget frontend (or vice versa)
+- Add to defaults but forget API handler
+- Add to types but forget auto-save
+- Forget to add to database initialization
+- Mix up boolean/string/number types between backend and frontend
+- Forget the second defaults.json file (there are TWO!)
+
+✅ **DO**:
+- Use the checklist EVERY time
+- Verify with grep after changes
+- Test both GET and POST API endpoints
+- Check browser devtools for setting value
+- Verify database contains the setting key
 
 ## Backend Patterns (Go)
 

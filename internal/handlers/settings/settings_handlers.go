@@ -35,6 +35,9 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 		shortcuts, _ := h.DB.GetSetting("shortcuts")
 		rules, _ := h.DB.GetSetting("rules")
 		defaultViewMode, _ := h.DB.GetSetting("default_view_mode")
+		mediaCacheEnabled, _ := h.DB.GetSetting("media_cache_enabled")
+		mediaCacheMaxSizeMB, _ := h.DB.GetSetting("media_cache_max_size_mb")
+		mediaCacheMaxAgeDays, _ := h.DB.GetSetting("media_cache_max_age_days")
 		summaryEnabled, _ := h.DB.GetSetting("summary_enabled")
 		summaryLength, _ := h.DB.GetSetting("summary_length")
 		summaryProvider, _ := h.DB.GetSetting("summary_provider")
@@ -65,6 +68,9 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 			"shortcuts":                shortcuts,
 			"rules":                    rules,
 			"default_view_mode":        defaultViewMode,
+			"media_cache_enabled":      mediaCacheEnabled,
+			"media_cache_max_size_mb":  mediaCacheMaxSizeMB,
+			"media_cache_max_age_days": mediaCacheMaxAgeDays,
 			"summary_enabled":          summaryEnabled,
 			"summary_length":           summaryLength,
 			"summary_provider":         summaryProvider,
@@ -96,6 +102,9 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 			Shortcuts             string `json:"shortcuts"`
 			Rules                 string `json:"rules"`
 			DefaultViewMode       string `json:"default_view_mode"`
+			MediaCacheEnabled     string `json:"media_cache_enabled"`
+			MediaCacheMaxSizeMB   string `json:"media_cache_max_size_mb"`
+			MediaCacheMaxAgeDays  string `json:"media_cache_max_age_days"`
 			SummaryEnabled        string `json:"summary_enabled"`
 			SummaryLength         string `json:"summary_length"`
 			SummaryProvider       string `json:"summary_provider"`
@@ -161,6 +170,18 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 
 		if req.DefaultViewMode != "" {
 			h.DB.SetSetting("default_view_mode", req.DefaultViewMode)
+		}
+
+		if req.MediaCacheEnabled != "" {
+			h.DB.SetSetting("media_cache_enabled", req.MediaCacheEnabled)
+		}
+
+		if req.MediaCacheMaxSizeMB != "" {
+			h.DB.SetSetting("media_cache_max_size_mb", req.MediaCacheMaxSizeMB)
+		}
+
+		if req.MediaCacheMaxAgeDays != "" {
+			h.DB.SetSetting("media_cache_max_age_days", req.MediaCacheMaxAgeDays)
 		}
 
 		if req.SummaryEnabled != "" {
