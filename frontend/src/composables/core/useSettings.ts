@@ -29,6 +29,7 @@ export function useSettings() {
     media_cache_max_size_mb: settingsDefaults.media_cache_max_size_mb,
     media_cache_max_age_days: settingsDefaults.media_cache_max_age_days,
     startup_on_boot: settingsDefaults.startup_on_boot,
+    close_to_tray: settingsDefaults.close_to_tray,
     shortcuts: settingsDefaults.shortcuts,
     rules: settingsDefaults.rules,
     summary_enabled: settingsDefaults.summary_enabled,
@@ -51,6 +52,7 @@ export function useSettings() {
     proxy_username: settingsDefaults.proxy_username,
     proxy_password: settingsDefaults.proxy_password,
     google_translate_endpoint: settingsDefaults.google_translate_endpoint,
+    show_article_preview_images: settingsDefaults.show_article_preview_images,
   });
 
   /**
@@ -83,6 +85,7 @@ export function useSettings() {
         media_cache_max_age_days:
           parseInt(data.media_cache_max_age_days) || settingsDefaults.media_cache_max_age_days,
         startup_on_boot: data.startup_on_boot === 'true',
+        close_to_tray: data.close_to_tray === 'true',
         shortcuts: data.shortcuts || settingsDefaults.shortcuts,
         rules: data.rules || settingsDefaults.rules,
         summary_enabled: data.summary_enabled === 'true',
@@ -107,6 +110,7 @@ export function useSettings() {
         proxy_password: data.proxy_password || settingsDefaults.proxy_password,
         google_translate_endpoint:
           data.google_translate_endpoint || settingsDefaults.google_translate_endpoint,
+        show_article_preview_images: data.show_article_preview_images === 'true',
       };
 
       return settings.value;

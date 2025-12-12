@@ -97,7 +97,7 @@ func GetStaggeredDelay(feedID int64, totalFeeds int) time.Duration {
 
 	// Spread feeds evenly across the interval
 	// Use feedID as a deterministic seed for distribution
-	staggerFactor := float64(feedID % int64(totalFeeds)) / float64(totalFeeds)
+	staggerFactor := float64(feedID%int64(totalFeeds)) / float64(totalFeeds)
 	maxStagger := 5 * time.Minute // Maximum stagger of 5 minutes
 
 	return time.Duration(staggerFactor * float64(maxStagger))

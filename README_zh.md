@@ -3,7 +3,7 @@
   <h1>MrRSS</h1>
   <p><strong>一个现代化的跨平台桌面 RSS 阅读器</strong></p>
 
-   [![Version](https://img.shields.io/badge/version-1.2.13-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
+   [![Version](https://img.shields.io/badge/version-1.2.14-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
   [![License](https://img.shields.io/badge/license-GPLv3-green.svg)](LICENSE)
    [![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
   [![Wails](https://img.shields.io/badge/Wails-v2-red)](https://wails.io/)
@@ -41,9 +41,17 @@
 
 从 [Releases](https://github.com/WCY-dt/MrRSS/releases/latest) 页面下载适合您平台的最新安装包：
 
+**标准安装版：**
+
 - **Windows:** `MrRSS-{version}-windows-amd64-installer.exe` / `MrRSS-{version}-windows-arm64-installer.exe`
 - **macOS:** `MrRSS-{version}-darwin-universal.dmg`
 - **Linux:** `MrRSS-{version}-linux-amd64.AppImage` / `MrRSS-{version}-linux-arm64.AppImage`
+
+**便携版**（无需安装，所有数据在一个文件夹内）：
+
+- **Windows:** `MrRSS-{version}-windows-{arch}-portable.zip`
+- **Linux:** `MrRSS-{version}-linux-{arch}-portable.tar.gz`
+- **macOS:** `MrRSS-{version}-darwin-{arch}-portable.zip`
 
 #### 选项 2: 源码构建
 
@@ -61,14 +69,20 @@
 - [Node.js](https://nodejs.org/) (LTS 版本，带 npm)
 - [Wails](https://wails.io/docs/gettingstarted/installation) CLI
 
-**仅限 Linux:** 还需要安装系统依赖：
+**平台特定要求：**
+
+- **Linux**: 需要系统依赖（GTK、WebKit、AppIndicator）
+- **Windows**: 需要 MinGW（用于 CGO/systray 支持）
+- **macOS**: 需要 Xcode 命令行工具
+
+详细安装说明请参见[构建要求](docs/BUILD_REQUIREMENTS.md)
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev gcc pkg-config
+# Linux 快速设置（Ubuntu/Debian）：
+sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev gcc pkg-config
 
-# 对于旧版 Ubuntu（24.04 之前），请使用：
-# sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev gcc pkg-config
+# 对于旧版 Ubuntu（24.04 之前）：
+# sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev gcc pkg-config
 ```
 
 ##### 安装步骤
@@ -112,11 +126,15 @@ sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev gcc pkg-config
 
 ### 数据存储
 
-MrRSS 将所有用户数据（数据库、设置）存储在特定平台的目录中：
+**正常模式**（默认）：
 
 - **Windows:** `%APPDATA%\MrRSS\` (例如 `C:\Users\YourName\AppData\Roaming\MrRSS\`)
 - **macOS:** `~/Library/Application Support/MrRSS/`
 - **Linux:** `~/.local/share/MrRSS/`
+
+**便携模式**（当 `portable.txt` 文件存在时）：
+
+- 所有数据存储在 `data/` 文件夹中
 
 这确保了您的数据在应用更新和重新安装时得以保留。
 

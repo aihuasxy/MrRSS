@@ -3,7 +3,7 @@
   <h1>MrRSS</h1>
   <p><strong>A Modern, Cross-Platform Desktop RSS Reader</strong></p>
 
-   [![Version](https://img.shields.io/badge/version-1.2.13-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
+   [![Version](https://img.shields.io/badge/version-1.2.14-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
   [![License](https://img.shields.io/badge/license-GPLv3-green.svg)](LICENSE)
    [![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
   [![Wails](https://img.shields.io/badge/Wails-v2-red)](https://wails.io/)
@@ -41,9 +41,17 @@
 
 Download the latest installer for your platform from the [Releases](https://github.com/WCY-dt/MrRSS/releases/latest) page:
 
+**Standard Installation:**
+
 - **Windows:** `MrRSS-{version}-windows-amd64-installer.exe` / `MrRSS-{version}-windows-arm64-installer.exe`
 - **macOS:** `MrRSS-{version}-darwin-universal.dmg`
 - **Linux:** `MrRSS-{version}-linux-amd64.AppImage` / `MrRSS-{version}-linux-arm64.AppImage`
+
+**Portable Version** (no installation required, all data in one folder):
+
+- **Windows:** `MrRSS-{version}-windows-{arch}-portable.zip`
+- **Linux:** `MrRSS-{version}-linux-{arch}-portable.tar.gz`
+- **macOS:** `MrRSS-{version}-darwin-{arch}-portable.zip`
 
 #### Option 2: Build from Source
 
@@ -61,14 +69,20 @@ Before you begin, ensure you have the following installed:
 - [Node.js](https://nodejs.org/) (LTS version with npm)
 - [Wails](https://wails.io/docs/gettingstarted/installation) CLI
 
-**Linux only:** You also need to install system dependencies:
+**Platform-specific requirements:**
+
+- **Linux**: System dependencies required (GTK, WebKit, AppIndicator)
+- **Windows**: MinGW required (for CGO/systray support)
+- **macOS**: Xcode Command Line Tools
+
+For detailed installation instructions, see [Build Requirements](docs/BUILD_REQUIREMENTS.md)
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev gcc pkg-config
+# Quick setup for Linux (Ubuntu/Debian):
+sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev gcc pkg-config
 
-# For older Ubuntu versions (before 24.04), use:
-# sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev gcc pkg-config
+# For older Ubuntu versions (before 24.04):
+# sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev gcc pkg-config
 ```
 
 ### Installation
@@ -112,11 +126,15 @@ sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev gcc pkg-config
 
 ### Data Storage
 
-MrRSS stores all user data (database, settings) in platform-specific directories:
+**Normal Mode** (default):
 
 - **Windows:** `%APPDATA%\MrRSS\` (e.g., `C:\Users\YourName\AppData\Roaming\MrRSS\`)
 - **macOS:** `~/Library/Application Support/MrRSS/`
 - **Linux:** `~/.local/share/MrRSS/`
+
+**Portable Mode** (when `portable.txt` exists):
+
+- All data stored in `data/` folder
 
 This ensures your data persists across application updates and reinstalls.
 

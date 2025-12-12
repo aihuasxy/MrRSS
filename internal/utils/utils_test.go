@@ -24,9 +24,12 @@ func TestGetDataDir(t *testing.T) {
 		t.Errorf("Data directory does not exist: %s", dir)
 	}
 
-	// Check that it ends with MrRSS
-	if !strings.HasSuffix(dir, "MrRSS") {
-		t.Errorf("Expected path to end with MrRSS, got: %s", dir)
+	// Check that it ends with MrRSS (in normal mode) or data (in portable mode)
+	if !IsPortableMode() && !strings.HasSuffix(dir, "MrRSS") {
+		t.Errorf("Expected path to end with MrRSS in normal mode, got: %s", dir)
+	}
+	if IsPortableMode() && !strings.HasSuffix(dir, "data") {
+		t.Errorf("Expected path to end with data in portable mode, got: %s", dir)
 	}
 }
 

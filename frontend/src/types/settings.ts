@@ -27,6 +27,7 @@ export interface SettingsData {
   show_hidden_articles: boolean;
   default_view_mode: string;
   startup_on_boot: boolean;
+  close_to_tray: boolean;
   shortcuts: string;
   rules: string;
   summary_enabled: boolean;
@@ -43,6 +44,7 @@ export interface SettingsData {
   proxy_username: string;
   proxy_password: string;
   google_translate_endpoint: string;
+  show_article_preview_images: boolean;
   [key: string]: unknown; // Allow additional properties
 }
 

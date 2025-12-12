@@ -75,7 +75,8 @@ func (db *DB) Init() error {
 			"summary_provider", "summary_ai_api_key", "summary_ai_endpoint", "summary_ai_model", "summary_ai_system_prompt",
 			"media_cache_enabled", "media_cache_max_size_mb", "media_cache_max_age_days",
 			"proxy_enabled", "proxy_type", "proxy_host", "proxy_port", "proxy_username", "proxy_password",
-			"shortcuts", "rules", "startup_on_boot", "google_translate_endpoint",
+			"shortcuts", "rules", "startup_on_boot", "close_to_tray", "google_translate_endpoint", "show_article_preview_images",
+      "window_x", "window_y", "window_width", "window_height", "window_maximized",
 		}
 		for _, key := range settingsKeys {
 			defaultVal := config.GetString(key)

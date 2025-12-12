@@ -271,8 +271,8 @@ export function hasOnlyPreservedContent(element: HTMLElement): boolean {
   const elementsToRemove = clone.querySelectorAll(PRESERVED_SELECTORS.join(','));
   elementsToRemove.forEach((el) => el.remove());
 
-  // Also remove hyperlinks to check for translatable text
-  clone.querySelectorAll('a').forEach((el) => el.remove());
+  // Note: We do NOT remove hyperlinks because they contain translatable text
+  // Hyperlinks should be translated along with their text content
 
   // Check if there's any meaningful text left
   const remainingText = clone.textContent?.trim() || '';
@@ -290,8 +290,8 @@ export function getTranslatableText(element: HTMLElement): string {
   const elementsToRemove = clone.querySelectorAll(PRESERVED_SELECTORS.join(','));
   elementsToRemove.forEach((el) => el.remove());
 
-  // Also remove hyperlinks for consistency with hasOnlyPreservedContent
-  clone.querySelectorAll('a').forEach((el) => el.remove());
+  // Note: We do NOT remove hyperlinks because they contain translatable text
+  // Hyperlinks should be translated along with their text content
 
   return clone.textContent?.trim() || '';
 }

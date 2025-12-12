@@ -114,6 +114,9 @@ export function useSettingsAutoSave(settings: Ref<SettingsData>) {
           startup_on_boot: (
             settings.value.startup_on_boot ?? settingsDefaults.startup_on_boot
           ).toString(),
+          close_to_tray: (
+            settings.value.close_to_tray ?? settingsDefaults.close_to_tray
+          ).toString(),
           shortcuts: settings.value.shortcuts ?? settingsDefaults.shortcuts,
           summary_enabled: (
             settings.value.summary_enabled ?? settingsDefaults.summary_enabled
@@ -137,6 +140,10 @@ export function useSettingsAutoSave(settings: Ref<SettingsData>) {
           proxy_password: settings.value.proxy_password ?? settingsDefaults.proxy_password,
           google_translate_endpoint:
             settings.value.google_translate_endpoint ?? settingsDefaults.google_translate_endpoint,
+          show_article_preview_images: (
+            settings.value.show_article_preview_images ??
+            settingsDefaults.show_article_preview_images
+          ).toString(),
         }),
       });
 
@@ -180,6 +187,15 @@ export function useSettingsAutoSave(settings: Ref<SettingsData>) {
       if (settings.value.show_hidden_articles !== undefined) {
         store.fetchArticles();
       }
+
+      // Notify about show_article_preview_images change
+      window.dispatchEvent(
+        new CustomEvent('show-preview-images-changed', {
+          detail: {
+            value: settings.value.show_article_preview_images,
+          },
+        })
+      );
     } catch (e) {
       console.error('Error auto-saving settings:', e);
     }

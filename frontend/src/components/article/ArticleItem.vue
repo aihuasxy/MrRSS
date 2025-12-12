@@ -5,6 +5,7 @@ import { PhEyeSlash, PhStar, PhClockCountdown } from '@phosphor-icons/vue';
 import type { Article } from '@/types/models';
 import { formatDate as formatDateUtil } from '@/utils/date';
 import { getProxiedMediaUrl, isMediaCacheEnabled } from '@/utils/mediaProxy';
+import { useShowPreviewImages } from '@/composables/ui/useShowPreviewImages';
 
 interface Props {
   article: Article;
@@ -20,14 +21,20 @@ const emit = defineEmits<{
 }>();
 
 const { t, locale } = useI18n();
+const { showPreviewImages } = useShowPreviewImages();
 
 const mediaCacheEnabled = ref(false);
+
 const imageUrl = computed(() => {
   if (!props.article.image_url) return '';
   if (mediaCacheEnabled.value) {
     return getProxiedMediaUrl(props.article.image_url, props.article.url);
   }
   return props.article.image_url;
+});
+
+const shouldShowImage = computed(() => {
+  return showPreviewImages.value && props.article.image_url;
 });
 
 function formatDate(dateStr: string): string {
@@ -60,7 +67,7 @@ onMounted(async () => {
     ]"
   >
     <img
-      v-if="article.image_url"
+      v-if="shouldShowImage"
       :src="imageUrl"
       class="w-16 h-12 sm:w-20 sm:h-[60px] object-cover rounded bg-bg-tertiary shrink-0 border border-border"
       @error="handleImageError"

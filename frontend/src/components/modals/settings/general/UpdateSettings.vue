@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { PhArrowClockwise, PhArrowsClockwise, PhClock, PhPower } from '@phosphor-icons/vue';
+import {
+  PhArchiveTray,
+  PhArrowClockwise,
+  PhArrowsClockwise,
+  PhClock,
+  PhPower,
+} from '@phosphor-icons/vue';
 import type { SettingsData } from '@/types/settings';
 import { formatRelativeTime } from '@/utils/date';
 
@@ -90,6 +96,21 @@ function formatLastUpdate(timestamp: string): string {
         </div>
       </div>
       <input type="checkbox" v-model="settings.startup_on_boot" class="toggle" />
+    </div>
+
+    <div class="setting-item mt-2 sm:mt-3">
+      <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
+        <PhArchiveTray :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
+        <div class="flex-1 min-w-0">
+          <div class="font-medium mb-0 sm:mb-1 text-sm sm:text-base">
+            {{ t('closeToTray') }}
+          </div>
+          <div class="text-xs text-text-secondary hidden sm:block">
+            {{ t('closeToTrayDesc') }}
+          </div>
+        </div>
+      </div>
+      <input type="checkbox" v-model="settings.close_to_tray" class="toggle" />
     </div>
   </div>
 </template>

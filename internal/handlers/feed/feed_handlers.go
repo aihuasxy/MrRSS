@@ -22,14 +22,14 @@ func HandleFeeds(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 // HandleAddFeed adds a new feed subscription and immediately fetches its articles.
 func HandleAddFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		URL             string `json:"url"`
-		Category        string `json:"category"`
-		Title           string `json:"title"`
-		ScriptPath      string `json:"script_path"`
-		HideFromTimeline bool  `json:"hide_from_timeline"`
-		ProxyURL        string `json:"proxy_url"`
-		ProxyEnabled    bool   `json:"proxy_enabled"`
-		RefreshInterval int    `json:"refresh_interval"`
+		URL              string `json:"url"`
+		Category         string `json:"category"`
+		Title            string `json:"title"`
+		ScriptPath       string `json:"script_path"`
+		HideFromTimeline bool   `json:"hide_from_timeline"`
+		ProxyURL         string `json:"proxy_url"`
+		ProxyEnabled     bool   `json:"proxy_enabled"`
+		RefreshInterval  int    `json:"refresh_interval"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -90,15 +90,15 @@ func HandleDeleteFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 // HandleUpdateFeed updates a feed's properties.
 func HandleUpdateFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		ID              int64  `json:"id"`
-		Title           string `json:"title"`
-		URL             string `json:"url"`
-		Category        string `json:"category"`
-		ScriptPath      string `json:"script_path"`
-		HideFromTimeline bool  `json:"hide_from_timeline"`
-		ProxyURL        string `json:"proxy_url"`
-		ProxyEnabled    bool   `json:"proxy_enabled"`
-		RefreshInterval int    `json:"refresh_interval"`
+		ID               int64  `json:"id"`
+		Title            string `json:"title"`
+		URL              string `json:"url"`
+		Category         string `json:"category"`
+		ScriptPath       string `json:"script_path"`
+		HideFromTimeline bool   `json:"hide_from_timeline"`
+		ProxyURL         string `json:"proxy_url"`
+		ProxyEnabled     bool   `json:"proxy_enabled"`
+		RefreshInterval  int    `json:"refresh_interval"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

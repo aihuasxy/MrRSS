@@ -222,6 +222,7 @@ jobs:
           sudo apt-get install -y \
             libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
             gcc \
             pkg-config \
             wget \
@@ -242,6 +243,7 @@ jobs:
           sudo apt-get install -y \
             libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
             gcc \
             pkg-config \
             wget \
@@ -264,8 +266,8 @@ jobs:
       - name: Install Windows dependencies (ARM64)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'windows' && matrix.arch == 'arm64'
         run: |
-          choco install nsis -y
-          # Note: ARM64 Windows runner may already have necessary build tools
+          choco install mingw nsis -y
+          # MinGW is required for systray (CGO)
         shell: pwsh
 
       - name: Install Wails
@@ -284,6 +286,8 @@ jobs:
 
       - name: Build application (Linux)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'linux'
+        env:
+          CGO_ENABLED: 1
         run: |
           wails build -clean -ldflags "-s -w" -platform ${{ matrix.platform }}/${{ matrix.arch }}
 
@@ -300,6 +304,8 @@ jobs:
       - name: Build application (Windows)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'windows'
         shell: pwsh
+        env:
+          CGO_ENABLED: 1
         run: |
           wails build -clean -ldflags "-s -w" -platform ${{ matrix.platform }}/${{ matrix.arch }}
 
@@ -313,6 +319,8 @@ jobs:
 
       - name: Build application (macOS)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'darwin'
+        env:
+          CGO_ENABLED: 1
         run: |
           # macOS runners can build universal binaries natively
           # Universal binaries include both Intel (amd64) and Apple Silicon (arm64)
@@ -371,6 +379,41 @@ jobs:
         shell: pwsh
         continue-on-error: true
 
+      - name: Create portable package (Windows)
+        if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'windows'
+        run: |
+          $version = "${{ needs.create-release.outputs.version }}"
+          $arch = "${{ matrix.arch }}"
+          $portableDir = "build/portable-temp"
+
+          # Create portable directory structure
+          New-Item -ItemType Directory -Force -Path $portableDir | Out-Null
+
+          # Copy executable
+          Copy-Item "build/bin/MrRSS.exe" -Destination $portableDir
+
+          # Create portable.txt marker
+          New-Item -ItemType File -Path "$portableDir/portable.txt" | Out-Null
+
+          # Create README for portable version
+          @"
+          MrRSS Portable Edition
+
+          This is the portable version of MrRSS. All data will be stored in the 'data' folder
+          next to this executable.
+
+          To run: Double-click MrRSS.exe
+
+          For more information, visit: https://github.com/WCY-dt/MrRSS
+          "@ | Out-File -FilePath "$portableDir/README.txt" -Encoding UTF8
+
+          # Create zip file
+          $zipName = "MrRSS-$version-windows-$arch-portable.zip"
+          Compress-Archive -Path "$portableDir/*" -DestinationPath "build/bin/$zipName" -Force
+
+          Write-Host "Created portable package: $zipName"
+        shell: pwsh
+
       - name: Create installer (Linux)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'linux'
         run: |
@@ -388,6 +431,41 @@ jobs:
           ./build/macos/create-dmg.sh
         continue-on-error: true
 
+      - name: Create portable package (macOS)
+        if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'darwin'
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          ARCH="${{ matrix.arch }}"
+          PORTABLE_DIR="build/portable-temp"
+
+          # Create portable directory structure
+          mkdir -p "$PORTABLE_DIR"
+
+          # Copy .app bundle
+          cp -R build/bin/MrRSS.app "$PORTABLE_DIR/"
+
+          # Create portable.txt marker
+          touch "$PORTABLE_DIR/portable.txt"
+
+          # Create README for portable version
+          cat > "$PORTABLE_DIR/README.txt" << 'EOF'
+          MrRSS Portable Edition
+
+          This is the portable version of MrRSS. All data will be stored in the 'data' folder
+          next to the MrRSS.app.
+
+          To run: Double-click MrRSS.app
+
+          For more information, visit: https://github.com/WCY-dt/MrRSS
+          EOF
+
+          # Create zip file
+          cd "$PORTABLE_DIR"
+          zip -r "../bin/MrRSS-${VERSION}-darwin-${ARCH}-portable.zip" *
+          cd ../..
+
+          echo "Created portable package: MrRSS-${VERSION}-darwin-${ARCH}-portable.zip"
+
       - name: Package application (Linux - tar.gz fallback)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'linux'
         run: |
@@ -399,6 +477,42 @@ jobs:
             exit 1
           fi
 
+      - name: Create portable package (Linux)
+        if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'linux'
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          ARCH="${{ matrix.arch }}"
+          PORTABLE_DIR="build/portable-temp"
+
+          # Create portable directory structure
+          mkdir -p "$PORTABLE_DIR"
+
+          # Copy executable
+          cp build/bin/MrRSS "$PORTABLE_DIR/"
+          chmod +x "$PORTABLE_DIR/MrRSS"
+
+          # Create portable.txt marker
+          touch "$PORTABLE_DIR/portable.txt"
+
+          # Create README for portable version
+          cat > "$PORTABLE_DIR/README.txt" << 'EOF'
+          MrRSS Portable Edition
+
+          This is the portable version of MrRSS. All data will be stored in the 'data' folder
+          next to this executable.
+
+          To run: ./MrRSS
+
+          For more information, visit: https://github.com/WCY-dt/MrRSS
+          EOF
+
+          # Create tar.gz file
+          cd "$PORTABLE_DIR"
+          tar -czf "../bin/MrRSS-${VERSION}-linux-${ARCH}-portable.tar.gz" *
+          cd ../..
+
+          echo "Created portable package: MrRSS-${VERSION}-linux-${ARCH}-portable.tar.gz"
+
       - name: Collect artifacts
         if: steps.check_artifacts.outputs.skip_build == 'false'
         id: collect_artifacts
@@ -407,14 +521,19 @@ jobs:
           cd build/bin
           artifacts=""
 
-          # Check for installer
+          # Check for installer and portable package
           if [ "${{ matrix.platform }}" = "windows" ]; then
             installer="MrRSS-${{ needs.create-release.outputs.version }}-windows-${{ matrix.arch }}-installer.exe"
+            portable="MrRSS-${{ needs.create-release.outputs.version }}-windows-${{ matrix.arch }}-portable.zip"
             if [ -f "$installer" ]; then
               artifacts="$artifacts$installer,"
             fi
+            if [ -f "$portable" ]; then
+              artifacts="$artifacts$portable,"
+            fi
           elif [ "${{ matrix.platform }}" = "linux" ]; then
             installer="MrRSS-${{ needs.create-release.outputs.version }}-linux-${{ matrix.arch }}.AppImage"
+            portable="MrRSS-${{ needs.create-release.outputs.version }}-linux-${{ matrix.arch }}-portable.tar.gz"
             if [ -f "$installer" ]; then
               artifacts="$artifacts$installer,"
             fi
@@ -423,10 +542,17 @@ jobs:
             if [ -f "$package" ]; then
               artifacts="$artifacts$package,"
             fi
+            if [ -f "$portable" ]; then
+              artifacts="$artifacts$portable,"
+            fi
           elif [ "${{ matrix.platform }}" = "darwin" ]; then
             installer="MrRSS-${{ needs.create-release.outputs.version }}-darwin-${{ matrix.arch }}.dmg"
+            portable="MrRSS-${{ needs.create-release.outputs.version }}-darwin-${{ matrix.arch }}-portable.zip"
             if [ -f "$installer" ]; then
               artifacts="$artifacts$installer,"
+            fi
+            if [ -f "$portable" ]; then
+              artifacts="$artifacts$portable,"
             fi
           fi
 
