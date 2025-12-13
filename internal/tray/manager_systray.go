@@ -1,5 +1,3 @@
-//go:build windows || linux
-
 package tray
 
 import (
@@ -7,7 +5,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/getlantern/systray"
+	"fyne.io/systray"
 
 	"MrRSS/internal/handlers/core"
 )
