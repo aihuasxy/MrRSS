@@ -8,6 +8,10 @@ import { PhImage, PhHeart } from '@phosphor-icons/vue';
 const store = useAppStore();
 const { t } = useI18n();
 
+// Constants
+const ITEMS_PER_PAGE = 50;
+const SCROLL_THRESHOLD_PX = 500; // Start loading more items when user is 500px from bottom
+
 const articles = ref<Article[]>([]);
 const isLoading = ref(false);
 const page = ref(1);
@@ -24,7 +28,7 @@ async function fetchImages(loadMore = false) {
 
   isLoading.value = true;
   try {
-    let url = `/api/articles/images?page=${page.value}&limit=50`;
+    let url = `/api/articles/images?page=${page.value}&limit=${ITEMS_PER_PAGE}`;
     if (feedId.value) {
       url += `&feed_id=${feedId.value}`;
     }
@@ -39,7 +43,7 @@ async function fetchImages(loadMore = false) {
         articles.value = newArticles;
       }
 
-      hasMore.value = newArticles.length >= 50;
+      hasMore.value = newArticles.length >= ITEMS_PER_PAGE;
     }
   } catch (e) {
     console.error('Failed to load images:', e);
@@ -54,7 +58,7 @@ function handleScroll() {
   const windowHeight = window.innerHeight;
   const documentHeight = document.documentElement.scrollHeight;
 
-  if (scrollTop + windowHeight >= documentHeight - 500 && !isLoading.value && hasMore.value) {
+  if (scrollTop + windowHeight >= documentHeight - SCROLL_THRESHOLD_PX && !isLoading.value && hasMore.value) {
     page.value++;
     fetchImages(true);
   }
