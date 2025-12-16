@@ -19,12 +19,12 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
 # Development
-dev: ## Start development server
-	wails dev
+dev: ## Start development server (Wails v3)
+	wails3 dev
 
-# Building
+# Building (Wails v3)
 build: build-frontend build-backend ## Build both frontend and backend
-	wails build -skipbindings
+	wails3 build
 
 build-frontend: ## Build frontend only
 	cd frontend && npm run build
