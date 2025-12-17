@@ -13,7 +13,7 @@ set -e
 
 APP_NAME="MrRSS"
 # Get version from wails.json if available, otherwise use default
-VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' wails.json 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)".*/\1/' || echo "1.3.0-alpha.1")
+VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' wails.json 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)".*/\1/' || echo "1.3.0-alpha.3")
 # Get architecture from environment variable or default to amd64
 ARCH=${ARCH:-amd64}
 echo "Target architecture: ${ARCH}"
@@ -104,11 +104,6 @@ set -e
 # Copy desktop file to root
 cp "${APPDIR}/usr/share/applications/${APP_NAME}.desktop" "${APPDIR}/"
 
-# Clean up any previous build artifacts that might cause architecture mismatch
-echo "Cleaning up old AppDir artifacts..."
-find "${APPDIR}" -name "*.so*" -type f -delete 2>/dev/null || true
-find "${APPDIR}" -name "*.a" -type f -delete 2>/dev/null || true
-
 # Download appimagetool if not present
 APPIMAGETOOL_ARCH="x86_64"
 if [ "${ARCH}" = "arm64" ]; then
@@ -192,10 +187,13 @@ if [ -n "${CI}" ] || ! [ -e /dev/fuse ]; then
 
         # Fallback: create tar.gz instead
         echo "Falling back to tar.gz archive..."
-        cd "${BUILD_DIR}"
-        tar czf "${APP_NAME}-${VERSION}-linux-${ARCH}.tar.gz" -C "${APPDIR}/usr/bin" "${APP_NAME}"
-        cd -
-        echo "Created fallback archive: ${BUILD_DIR}/${APP_NAME}-${VERSION}-linux-${ARCH}.tar.gz"
+        if [ -f "${APPDIR}/usr/bin/${APP_NAME}" ]; then
+            tar czf "${BUILD_DIR}/${APP_NAME}-${VERSION}-linux-${ARCH}.tar.gz" -C "${APPDIR}/usr/bin" "${APP_NAME}"
+            echo "Created fallback archive: ${BUILD_DIR}/${APP_NAME}-${VERSION}-linux-${ARCH}.tar.gz"
+        else
+            echo "Error: Binary not found at ${APPDIR}/usr/bin/${APP_NAME}"
+            exit 1
+        fi
         exit 0
     fi
 else
@@ -207,10 +205,13 @@ else
 
         # Fallback: create tar.gz instead
         echo "Falling back to tar.gz archive..."
-        cd "${BUILD_DIR}"
-        tar czf "${APP_NAME}-${VERSION}-linux-${ARCH}.tar.gz" -C "${APPDIR}/usr/bin" "${APP_NAME}"
-        cd -
-        echo "Created fallback archive: ${BUILD_DIR}/${APP_NAME}-${VERSION}-linux-${ARCH}.tar.gz"
+        if [ -f "${APPDIR}/usr/bin/${APP_NAME}" ]; then
+            tar czf "${BUILD_DIR}/${APP_NAME}-${VERSION}-linux-${ARCH}.tar.gz" -C "${APPDIR}/usr/bin" "${APP_NAME}"
+            echo "Created fallback archive: ${BUILD_DIR}/${APP_NAME}-${VERSION}-linux-${ARCH}.tar.gz"
+        else
+            echo "Error: Binary not found at ${APPDIR}/usr/bin/${APP_NAME}"
+            exit 1
+        fi
         exit 0
     fi
 fi

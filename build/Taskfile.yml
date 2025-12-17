@@ -4,18 +4,11 @@ tasks:
   go:mod:tidy:
     summary: Runs `go mod tidy`
     internal: true
+    sources:
+      - go.mod
+      - go.sum
     cmds:
-      # Temporarily rename frontend/node_modules to avoid Go scanning it
-      # This prevents issues with platform-specific packages like fsevents
-      - |
-        if [ -d "frontend/node_modules" ]; then
-          mv frontend/node_modules frontend/.node_modules.tmp || true
-        fi
       - go mod tidy
-      - |
-        if [ -d "frontend/.node_modules.tmp" ]; then
-          mv frontend/.node_modules.tmp frontend/node_modules || true
-        fi
 
   install:frontend:deps:
     summary: Install frontend dependencies
