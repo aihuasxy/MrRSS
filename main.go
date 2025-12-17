@@ -6,19 +6,17 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
 
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/logger"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"github.com/wailsapp/wails/v2/pkg/options/mac"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 
 	"MrRSS/internal/database"
 	"MrRSS/internal/feed"
@@ -38,18 +36,14 @@ import (
 	window "MrRSS/internal/handlers/window"
 	"MrRSS/internal/network"
 	"MrRSS/internal/translation"
-	"MrRSS/internal/tray"
 	"MrRSS/internal/utils"
 )
 
-//go:embed frontend/dist/*
+//go:embed frontend/dist
 var frontendFiles embed.FS
 
 //go:embed build/appicon.png
-var trayIconPNG []byte
-
-//go:embed build/windows/icon.ico
-var trayIconICO []byte
+var appIconPNG []byte
 
 type windowState struct {
 	width  int
@@ -57,31 +51,6 @@ type windowState struct {
 	x      int
 	y      int
 	valid  atomic.Bool
-}
-
-type atomicContext struct {
-	value atomic.Value // stores context.Context
-}
-
-func (ac *atomicContext) Store(ctx context.Context) {
-	ac.value.Store(ctx)
-}
-
-func (ac *atomicContext) Load() context.Context {
-	val := ac.value.Load()
-	if val == nil {
-		return nil
-	}
-	return val.(context.Context)
-}
-
-// getTrayIcon returns the appropriate icon bytes for the current platform
-func getTrayIcon() []byte {
-	// Windows requires .ico format, other platforms use .png
-	if utils.IsWindows() {
-		return trayIconICO
-	}
-	return trayIconPNG
 }
 
 type CombinedHandler struct {
@@ -95,6 +64,21 @@ func (h *CombinedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.fileServer.ServeHTTP(w, r)
+}
+
+// APIMiddleware routes API requests to the API handler, and lets Wails handle the rest
+func APIMiddleware(combinedHandler *CombinedHandler) application.Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Let the /wails route be handled by Wails runtime
+			if strings.HasPrefix(r.URL.Path, "/wails") {
+				next.ServeHTTP(w, r)
+				return
+			}
+			// Handle API routes and serve static files
+			combinedHandler.ServeHTTP(w, r)
+		})
+	}
 }
 
 func main() {
@@ -148,9 +132,6 @@ func main() {
 	fetcher := feed.NewFetcher(db, translator)
 	h := handlers.NewHandler(db, fetcher, translator)
 
-	// Use platform-specific icon format
-	trayIconBytes := getTrayIcon()
-	trayManager := tray.NewManager(h, trayIconBytes)
 	var quitRequested atomic.Bool
 	var lastWindowState windowState
 
@@ -226,114 +207,45 @@ func main() {
 		return err == nil && val == "true"
 	}
 
-	startTray := func(ctx context.Context) {
-		if trayManager == nil || trayManager.IsRunning() {
-			return
-		}
-		trayManager.Start(ctx, func() {
-			quitRequested.Store(true)
-			runtime.Quit(ctx)
-		}, func() {
-			if lastWindowState.valid.Load() {
-				// Validate window state before restoring
-				width := lastWindowState.width
-				height := lastWindowState.height
-				x := lastWindowState.x
-				y := lastWindowState.y
-
-				// Ensure minimum window size
-				if width < 400 {
-					width = 1024
-				}
-				if height < 300 {
-					height = 768
-				}
-
-				// Ensure window is at least partially on screen
-				// Allow some negative values for multi-monitor setups, but not extreme ones
-				if x < -1000 || x > 3000 {
-					x = 100
-				}
-				if y < -1000 || y > 3000 {
-					y = 100
-				}
-
-				log.Printf("Restoring window state: x=%d, y=%d, width=%d, height=%d", x, y, width, height)
-				runtime.WindowSetSize(ctx, width, height)
-				runtime.WindowSetPosition(ctx, x, y)
-			} else {
-				// No valid state, use safe defaults
-				log.Println("No valid window state, using defaults")
-				runtime.WindowSetSize(ctx, 1024, 768)
-				runtime.WindowCenter(ctx)
-			}
-			runtime.WindowShow(ctx)
-			runtime.WindowUnminimise(ctx)
-		})
-	}
-
-	storeWindowState := func(ctx context.Context) {
-		if ctx == nil {
-			return
-		}
-
-		w, h := runtime.WindowGetSize(ctx)
-		x, y := runtime.WindowGetPosition(ctx)
-
-		// Only store state if it's valid (reasonable size and position)
-		if w >= 400 && h >= 300 && w <= 4000 && h <= 3000 {
-			if x > -1000 && x < 3000 && y > -1000 && y < 3000 {
-				lastWindowState.width = w
-				lastWindowState.height = h
-				lastWindowState.x = x
-				lastWindowState.y = y
-				lastWindowState.valid.Store(true)
-				log.Printf("Stored window state: x=%d, y=%d, width=%d, height=%d", x, y, w, h)
-			} else {
-				log.Printf("Window position invalid (x=%d, y=%d), not storing", x, y)
-			}
-		} else {
-			log.Printf("Window size invalid (width=%d, height=%d), not storing", w, h)
-		}
-	}
-
 	// Start background scheduler
 	log.Println("Starting background scheduler...")
 	bgCtx, bgCancel := context.WithCancel(context.Background())
 
-	// Store the app context for single instance callback (thread-safe)
-	var appCtx atomicContext
+	// Encryption key for single instance communication (IPC between app instances).
+	// This key is used to encrypt/decrypt messages between first and subsequent instances.
+	// Note: This is not for sensitive data encryption - it only carries launch arguments.
+	// The key is hardcoded per Wails v3 examples since the data exchanged is not sensitive
+	// (just signals to bring window to front).
+	var encryptionKey = [32]byte{
+		0x1e, 0x1f, 0x1c, 0x1d, 0x1a, 0x1b, 0x18, 0x19,
+		0x16, 0x17, 0x14, 0x15, 0x12, 0x13, 0x10, 0x11,
+		0x0e, 0x0f, 0x0c, 0x0d, 0x0a, 0x0b, 0x08, 0x09,
+		0x06, 0x07, 0x04, 0x05, 0x02, 0x03, 0x00, 0x01,
+	}
 
-	log.Println("Starting Wails...")
-	err = wails.Run(&options.App{
-		Title:    "MrRSS",
-		Width:    1024,
-		Height:   768,
-		LogLevel: logger.DEBUG,
-		AssetServer: &assetserver.Options{
-			Assets:  frontendFS,
-			Handler: combinedHandler,
+	// Variable to store the main window reference
+	var mainWindow application.Window
+
+	log.Println("Starting Wails v3...")
+
+	// Create new Wails v3 application
+	app := application.New(application.Options{
+		Name:        "MrRSS",
+		Description: "A modern, privacy-focused RSS reader",
+		LogLevel:    slog.LevelDebug,
+		Assets: application.AssetOptions{
+			Handler:    combinedHandler,
+			Middleware: APIMiddleware(combinedHandler),
 		},
-		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 1},
-		Mac: &mac.Options{
-			TitleBar:             mac.TitleBarHiddenInset(),
-			Appearance:           mac.NSAppearanceNameAqua,
-			WebviewIsTransparent: false,
-			WindowIsTranslucent:  false,
-			// Prevent fullscreen black screen issue on MacOS
-			DisableZoom: false,
-			About: &mac.AboutInfo{
-				Title:   "MrRSS",
-				Message: "A modern, privacy-focused RSS reader\n\nCopyright © 2025 MrRSS Team",
-				Icon:    trayIconPNG,
-			},
+		Mac: application.MacOptions{
+			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
-		SingleInstanceLock: &options.SingleInstanceLock{
-			UniqueId: "com.mrrss.app",
-			OnSecondInstanceLaunch: func(secondInstanceData options.SecondInstanceData) {
+		SingleInstance: &application.SingleInstanceOptions{
+			UniqueID:      "com.mrrss.app",
+			EncryptionKey: encryptionKey,
+			OnSecondInstanceLaunch: func(data application.SecondInstanceData) {
 				log.Printf("Second instance detected, bringing window to front")
-				ctx := appCtx.Load()
-				if ctx != nil {
+				if mainWindow != nil {
 					// Restore window state if it was stored (minimized to tray)
 					if lastWindowState.valid.Load() {
 						width := lastWindowState.width
@@ -358,75 +270,50 @@ func main() {
 						}
 
 						log.Printf("Restoring window state: x=%d, y=%d, width=%d, height=%d", x, y, width, height)
-						runtime.WindowSetSize(ctx, width, height)
-						runtime.WindowSetPosition(ctx, x, y)
+						mainWindow.SetSize(width, height)
+						mainWindow.SetPosition(x, y)
 					}
 					// Show and unminimize the window
-					runtime.WindowShow(ctx)
-					runtime.WindowUnminimise(ctx)
+					mainWindow.Show()
+					mainWindow.Restore()
 				}
 			},
 		},
-		OnShutdown: func(ctx context.Context) {
-			log.Println("Shutting down...")
+	})
 
-			if trayManager != nil {
-				trayManager.Stop()
-			}
+	// Get window dimensions from stored state or defaults
+	windowWidth := 1024
+	windowHeight := 768
+	windowX := 0
+	windowY := 0
+	restoredFromDB := false
 
-			// Stop background tasks first
-			bgCancel()
-			// Give some time for tasks to finish
-			time.Sleep(500 * time.Millisecond)
-
-			// Close DB with timeout
-			done := make(chan struct{})
-			go func() {
-				if err := db.Close(); err != nil {
-					log.Printf("Error closing database: %v", err)
-				}
-				close(done)
-			}()
-
-			select {
-			case <-done:
-				log.Println("Database closed")
-			case <-time.After(2 * time.Second):
-				log.Println("Database close timed out")
-			}
-		},
-		OnStartup: func(ctx context.Context) {
-			log.Println("App started")
-			// Store context for single instance callback (thread-safe)
-			appCtx.Store(ctx)
-
-			// Try to restore window state from database
-			restoredFromDB := false
-			if x, err := db.GetSetting("window_x"); err == nil && x != "" {
-				if y, err := db.GetSetting("window_y"); err == nil && y != "" {
-					if width, err := db.GetSetting("window_width"); err == nil && width != "" {
-						if height, err := db.GetSetting("window_height"); err == nil && height != "" {
-							// Parse values
-							var xInt, yInt, widthInt, heightInt int
-							if _, err := fmt.Sscanf(x, "%d", &xInt); err == nil {
-								if _, err := fmt.Sscanf(y, "%d", &yInt); err == nil {
-									if _, err := fmt.Sscanf(width, "%d", &widthInt); err == nil {
-										if _, err := fmt.Sscanf(height, "%d", &heightInt); err == nil {
-											// Validate values
-											if widthInt >= 400 && heightInt >= 300 && widthInt <= 4000 && heightInt <= 3000 {
-												if xInt > -1000 && xInt < 3000 && yInt > -1000 && yInt < 3000 {
-													log.Printf("Restoring window state from database: x=%d, y=%d, width=%d, height=%d", xInt, yInt, widthInt, heightInt)
-													runtime.WindowSetSize(ctx, widthInt, heightInt)
-													runtime.WindowSetPosition(ctx, xInt, yInt)
-													restoredFromDB = true
-													// Store in memory for minimize-restore
-													lastWindowState.width = widthInt
-													lastWindowState.height = heightInt
-													lastWindowState.x = xInt
-													lastWindowState.y = yInt
-													lastWindowState.valid.Store(true)
-												}
-											}
+	// Try to restore window state from database
+	if x, err := db.GetSetting("window_x"); err == nil && x != "" {
+		if y, err := db.GetSetting("window_y"); err == nil && y != "" {
+			if width, err := db.GetSetting("window_width"); err == nil && width != "" {
+				if height, err := db.GetSetting("window_height"); err == nil && height != "" {
+					// Parse values
+					var xInt, yInt, widthInt, heightInt int
+					if _, err := fmt.Sscanf(x, "%d", &xInt); err == nil {
+						if _, err := fmt.Sscanf(y, "%d", &yInt); err == nil {
+							if _, err := fmt.Sscanf(width, "%d", &widthInt); err == nil {
+								if _, err := fmt.Sscanf(height, "%d", &heightInt); err == nil {
+									// Validate values
+									if widthInt >= 400 && heightInt >= 300 && widthInt <= 4000 && heightInt <= 3000 {
+										if xInt > -1000 && xInt < 3000 && yInt > -1000 && yInt < 3000 {
+											log.Printf("Found window state from database: x=%d, y=%d, width=%d, height=%d", xInt, yInt, widthInt, heightInt)
+											windowWidth = widthInt
+											windowHeight = heightInt
+											windowX = xInt
+											windowY = yInt
+											restoredFromDB = true
+											// Store in memory for minimize-restore
+											lastWindowState.width = widthInt
+											lastWindowState.height = heightInt
+											lastWindowState.x = xInt
+											lastWindowState.y = yInt
+											lastWindowState.valid.Store(true)
 										}
 									}
 								}
@@ -435,68 +322,238 @@ func main() {
 					}
 				}
 			}
+		}
+	}
 
-			if !restoredFromDB {
-				// Use default size if restoration failed
-				log.Println("No saved window state found, using defaults")
-				runtime.WindowSetSize(ctx, 1024, 768)
-				runtime.WindowCenter(ctx)
-			}
-
-			runtime.WindowShow(ctx)
-			log.Println("Window initialized")
-
-			if shouldCloseToTray() {
-				startTray(ctx)
-			}
-
-			// Detect network speed on startup in background
-			go func() {
-				log.Println("Detecting network speed...")
-				detector := network.NewDetector()
-				detectCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-				defer cancel()
-
-				result := detector.DetectSpeed(detectCtx)
-				if result.DetectionSuccess {
-					db.SetSetting("network_speed", string(result.SpeedLevel))
-					db.SetSetting("network_bandwidth_mbps", fmt.Sprintf("%.2f", result.BandwidthMbps))
-					db.SetSetting("network_latency_ms", strconv.FormatInt(result.LatencyMs, 10))
-					db.SetSetting("max_concurrent_refreshes", strconv.Itoa(result.MaxConcurrency))
-					db.SetSetting("last_network_test", result.DetectionTime.Format(time.RFC3339))
-					log.Printf("Network detection complete: %s (max concurrency: %d)", result.SpeedLevel, result.MaxConcurrency)
-				} else {
-					log.Printf("Network detection failed: %s", result.ErrorMessage)
-				}
-			}()
-
-			// Start background scheduler after a longer delay to allow UI to show first
-			go func() {
-				time.Sleep(5 * time.Second)
-				log.Println("Starting background scheduler...")
-				h.StartBackgroundScheduler(bgCtx)
-			}()
+	// Create main window options
+	windowOptions := application.WebviewWindowOptions{
+		Title:  "MrRSS",
+		Width:  windowWidth,
+		Height: windowHeight,
+		URL:    "/",
+		Mac: application.MacWindow{
+			TitleBar:                application.MacTitleBarHiddenInset,
+			InvisibleTitleBarHeight: 50,
 		},
-		OnBeforeClose: func(ctx context.Context) bool {
-			if quitRequested.Load() {
-				return false
-			}
+		BackgroundColour: application.NewRGB(255, 255, 255),
+	}
 
-			if shouldCloseToTray() {
-				storeWindowState(ctx)
-				// Fallback start in case tray failed to start on startup
-				startTray(ctx)
-				if trayManager != nil && trayManager.IsRunning() {
-					runtime.WindowHide(ctx)
-				} else {
-					runtime.WindowMinimise(ctx)
+	// Set position if restored from DB
+	if restoredFromDB {
+		windowOptions.X = windowX
+		windowOptions.Y = windowY
+	}
+
+	// Create main window
+	mainWindow = app.Window.NewWithOptions(windowOptions)
+
+	if !restoredFromDB {
+		log.Println("No saved window state found, centering window")
+		mainWindow.Center()
+	}
+
+	// Helper function to store window state
+	storeWindowState := func() {
+		if mainWindow == nil {
+			return
+		}
+
+		w, h := mainWindow.Size()
+		x, y := mainWindow.Position()
+
+		// Only store state if it's valid (reasonable size and position)
+		if w >= 400 && h >= 300 && w <= 4000 && h <= 3000 {
+			if x > -1000 && x < 3000 && y > -1000 && y < 3000 {
+				lastWindowState.width = w
+				lastWindowState.height = h
+				lastWindowState.x = x
+				lastWindowState.y = y
+				lastWindowState.valid.Store(true)
+				log.Printf("Stored window state: x=%d, y=%d, width=%d, height=%d", x, y, w, h)
+			} else {
+				log.Printf("Window position invalid (x=%d, y=%d), not storing", x, y)
+			}
+		} else {
+			log.Printf("Window size invalid (width=%d, height=%d), not storing", w, h)
+		}
+	}
+
+	// Create system tray if close_to_tray is enabled
+	var systemTray *application.SystemTray
+
+	setupSystemTray := func() {
+		if systemTray != nil {
+			return // Already set up
+		}
+
+		systemTray = app.SystemTray.New()
+		systemTray.SetIcon(appIconPNG)
+
+		// Create tray menu
+		trayMenu := app.NewMenu()
+
+		// Get language for labels
+		lang := "en"
+		if l, err := db.GetSetting("language"); err == nil && l != "" {
+			lang = l
+		}
+
+		var showLabel, refreshLabel, quitLabel string
+		switch lang {
+		case "zh-CN", "zh", "zh-cn":
+			showLabel = "显示 MrRSS"
+			refreshLabel = "立即刷新"
+			quitLabel = "退出"
+		default:
+			showLabel = "Show MrRSS"
+			refreshLabel = "Refresh now"
+			quitLabel = "Quit"
+		}
+
+		trayMenu.Add(showLabel).OnClick(func(ctx *application.Context) {
+			if mainWindow != nil {
+				// Restore window state if it was stored
+				if lastWindowState.valid.Load() {
+					width := lastWindowState.width
+					height := lastWindowState.height
+					x := lastWindowState.x
+					y := lastWindowState.y
+
+					if width < 400 {
+						width = 1024
+					}
+					if height < 300 {
+						height = 768
+					}
+					if x < -1000 || x > 3000 {
+						x = 100
+					}
+					if y < -1000 || y > 3000 {
+						y = 100
+					}
+
+					log.Printf("Restoring window state: x=%d, y=%d, width=%d, height=%d", x, y, width, height)
+					mainWindow.SetSize(width, height)
+					mainWindow.SetPosition(x, y)
 				}
-				return true
+				mainWindow.Show()
+				mainWindow.Restore()
 			}
+		})
 
-			return false
-		},
+		trayMenu.Add(refreshLabel).OnClick(func(ctx *application.Context) {
+			if h.Fetcher != nil {
+				go h.Fetcher.FetchAll(bgCtx)
+			}
+		})
+
+		trayMenu.AddSeparator()
+
+		trayMenu.Add(quitLabel).OnClick(func(ctx *application.Context) {
+			quitRequested.Store(true)
+			app.Quit()
+		})
+
+		systemTray.SetMenu(trayMenu)
+
+		// Handle clicks on tray icon to show window
+		systemTray.OnClick(func() {
+			if mainWindow != nil {
+				mainWindow.Show()
+				mainWindow.Restore()
+			}
+		})
+	}
+
+	// Register hook for window closing event
+	mainWindow.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
+		if quitRequested.Load() {
+			return // Allow close
+		}
+
+		if shouldCloseToTray() {
+			storeWindowState()
+			// Setup tray if not already
+			setupSystemTray()
+			// Hide the window instead of closing
+			mainWindow.Hide()
+			// Cancel the close event
+			e.Cancel()
+		}
 	})
+
+	// Setup tray on startup if close_to_tray is enabled
+	if shouldCloseToTray() {
+		setupSystemTray()
+	}
+
+	// On macOS, handle dock icon click to show the window
+	if runtime.GOOS == "darwin" {
+		app.Event.OnApplicationEvent(events.Mac.ApplicationShouldHandleReopen, func(event *application.ApplicationEvent) {
+			log.Println("Dock icon clicked, showing window")
+			if mainWindow != nil {
+				mainWindow.Show()
+				mainWindow.Restore()
+			}
+		})
+	}
+
+	// Detect network speed on startup in background
+	go func() {
+		time.Sleep(2 * time.Second) // Small delay to allow app to start
+		log.Println("Detecting network speed...")
+		detector := network.NewDetector()
+		detectCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+
+		result := detector.DetectSpeed(detectCtx)
+		if result.DetectionSuccess {
+			db.SetSetting("network_speed", string(result.SpeedLevel))
+			db.SetSetting("network_bandwidth_mbps", fmt.Sprintf("%.2f", result.BandwidthMbps))
+			db.SetSetting("network_latency_ms", strconv.FormatInt(result.LatencyMs, 10))
+			db.SetSetting("max_concurrent_refreshes", strconv.Itoa(result.MaxConcurrency))
+			db.SetSetting("last_network_test", result.DetectionTime.Format(time.RFC3339))
+			log.Printf("Network detection complete: %s (max concurrency: %d)", result.SpeedLevel, result.MaxConcurrency)
+		} else {
+			log.Printf("Network detection failed: %s", result.ErrorMessage)
+		}
+	}()
+
+	// Start background scheduler after a delay to allow UI to show first
+	go func() {
+		time.Sleep(5 * time.Second)
+		log.Println("Starting background scheduler...")
+		h.StartBackgroundScheduler(bgCtx)
+	}()
+
+	log.Println("Window initialized, running app...")
+
+	// Run the application
+	err = app.Run()
+
+	// Cleanup when app exits
+	log.Println("Shutting down...")
+
+	// Stop background tasks first
+	bgCancel()
+	// Give some time for tasks to finish
+	time.Sleep(500 * time.Millisecond)
+
+	// Close DB with timeout
+	done := make(chan struct{})
+	go func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Error closing database: %v", err)
+		}
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		log.Println("Database closed")
+	case <-time.After(2 * time.Second):
+		log.Println("Database close timed out")
+	}
 
 	if err != nil {
 		log.Printf("Error running Wails: %v", err)

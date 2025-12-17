@@ -4,15 +4,14 @@ This document describes the system-level dependencies required for building MrRS
 
 ## Overview
 
-MrRSS uses several native libraries that require CGO (C bindings for Go):
+MrRSS uses Wails v3 (alpha) framework which requires CGO (C bindings for Go):
 
-- **Wails v2**: For the desktop application framework
-- **systray**: For system tray integration (cross-platform)
+- **Wails v3**: For the desktop application framework with built-in system tray
 - **SQLite**: Pure Go implementation (`modernc.org/sqlite`), no C dependencies
 
 ## Important: CGO Requirement
 
-⚠️ **CRITICAL**: `systray` requires CGO to be enabled. You must set:
+⚠️ **CRITICAL**: Wails v3 requires CGO to be enabled. You must set:
 
 ```bash
 export CGO_ENABLED=1
@@ -21,7 +20,7 @@ export CGO_ENABLED=1
 Or when building:
 
 ```bash
-CGO_ENABLED=1 wails build
+CGO_ENABLED=1 wails3 build
 ```
 
 ## Platform-Specific Requirements
@@ -37,7 +36,7 @@ sudo apt-get install -y \
   pkg-config \
   libgtk-3-dev \
   libwebkit2gtk-4.1-dev \
-  libayatana-appindicator3-dev
+  libsoup-3.0-dev
 ```
 
 **Dependency Breakdown**:
@@ -45,24 +44,12 @@ sudo apt-get install -y \
 - `gcc`: C compiler (required for CGO)
 - `pkg-config`: Build tool for finding libraries
 - `libgtk-3-dev`: GTK3 development headers (for Wails UI)
-- `libwebkit2gtk-4.1-dev`: WebKit2GTK development headers (for Wails webview)
-- `libayatana-appindicator3-dev`: AppIndicator development headers (for systray)
+- `libwebkit2gtk-4.1-dev`: WebKit2GTK 4.1 development headers (for Wails webview, **required for Wails v3**)
+- `libsoup-3.0-dev`: HTTP library 3.0 (required for Wails v3)
+
+**Important**: Wails v3 requires WebKit2GTK 4.1 and libsoup 3.0. Older versions (WebKit2GTK 4.0, libsoup 2.4) are not compatible.
 
 **Note for Linux Mint**: Also install `libxapp-dev`
-
-#### Legacy AppIndicator Support
-
-If you need to support the older `libappindicator3` library instead of `libayatana-appindicator3`, install:
-
-```bash
-sudo apt-get install libappindicator3-dev
-```
-
-And build with the `legacy_appindicator` tag:
-
-```bash
-go build -tags=legacy_appindicator
-```
 
 #### Runtime Dependencies
 
@@ -70,7 +57,7 @@ End users running the compiled binary will need:
 
 - `libgtk-3-0`
 - `libwebkit2gtk-4.1-0`
-- `libayatana-appindicator3-1` (or `libappindicator3-1` for legacy)
+- `libsoup-3.0-0`
 
 ### Windows
 
@@ -165,23 +152,27 @@ macOS binaries are self-contained and don't require additional runtime dependenc
 
 ```bash
 # Development build with hot reload
-wails dev
+wails3 dev
 
-# Production build
-wails build -clean -ldflags "-s -w"
+# Production build (recommended: use Task)
+task build
 
-# Platform-specific build
-wails build -platform linux/amd64
-wails build -platform windows/amd64
-wails build -platform darwin/universal
+# Or directly with wails3
+wails3 build
+
+# Platform-specific build with Task
+task linux:build
+task windows:build
+task darwin:build
 ```
 
-### Important Wails Flags
+### Build Configuration
 
-- `-clean`: Clean build directory before building
-- `-ldflags "-s -w"`: Strip debug information for smaller binaries
-- `-skipbindings`: Skip generating bindings (MrRSS uses HTTP API)
-- `-platform <os/arch>`: Cross-compile for specific platform
+Wails v3 uses `build/config.yml` for build configuration and Taskfile for platform-specific builds:
+
+- **Frontend**: Automatically built via `frontend/package.json` scripts
+- **Backend**: CGO-enabled Go build with platform-specific flags
+- **Installers**: Created via platform-specific scripts (NSIS, create-dmg.sh, create-appimage.sh)
 
 ### Cross-Compilation
 
@@ -216,7 +207,7 @@ Our CI/CD pipeline automatically installs all required dependencies:
 
 ```bash
 export CGO_ENABLED=1
-wails build
+wails3 build
 ```
 
 ### Linux: "Package webkit2gtk-4.1 was not found"
@@ -229,17 +220,14 @@ sudo apt-get install libwebkit2gtk-4.1-dev
 
 ### Linux: "Package ayatana-appindicator3-0.1 was not found"
 
-**Solution**: Install libayatana-appindicator3 development headers:
+This error is from older versions. Wails v3 uses its own system tray implementation.
+
+### Linux: "Package libsoup-3.0 was not found"
+
+**Solution**: Install libsoup3 development headers:
 
 ```bash
-sudo apt-get install libayatana-appindicator3-dev
-```
-
-For older distributions, use the legacy version:
-
-```bash
-sudo apt-get install libappindicator3-dev
-go build -tags=legacy_appindicator
+sudo apt-get install libsoup-3.0-dev
 ```
 
 ### Windows: "gcc: command not found"
@@ -276,7 +264,7 @@ npm install
 cd ..
 
 # Run development server
-wails dev
+wails3 dev
 ```
 
 **Windows (PowerShell)**:
@@ -291,7 +279,7 @@ npm install
 cd ..
 
 # Run development server
-wails dev
+wails3 dev
 ```
 
 ## Related Documentation

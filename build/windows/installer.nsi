@@ -9,7 +9,7 @@
 ; All paths in this script are relative to the script directory.
 
 !define APP_NAME "MrRSS"
-!define APP_VERSION "1.2.20"
+!define APP_VERSION "1.3.0-alpha.1"
 !define APP_PUBLISHER "Ch3nyang"
 !define APP_URL "https://github.com/WCY-dt/MrRSS"
 !define APP_DESCRIPTION "A Modern, Cross-Platform Desktop RSS Reader"

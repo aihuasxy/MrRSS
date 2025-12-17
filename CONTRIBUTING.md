@@ -31,7 +31,7 @@ This project and everyone participating in it is governed by our [Code of Conduc
 
 - Go 1.24 or higher
 - Node.js (LTS version)
-- Wails CLI: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+- Wails CLI: `go install github.com/wailsapp/wails/v3/cmd/wails3@latest`
 
 **Linux only:** Install system dependencies:
 
@@ -201,6 +201,7 @@ npm test
 We provide automated scripts for running checks:
 
 **Linux/macOS:**
+
 ```bash
 # Run all quality checks (lint, test, build)
 ./scripts/check.sh
@@ -210,6 +211,7 @@ We provide automated scripts for running checks:
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 # Run all quality checks (lint, test, build)
 .\scripts\check.ps1

@@ -1,36 +1,48 @@
-# Makefile for MrRSS (Cross-platform)
-.PHONY: help build build-frontend build-backend test test-frontend test-backend lint lint-frontend format format-frontend clean dev setup install-deps update-deps check pre-commit release-check love
+# Makefile for MrRSS (Wails v3 + Task)
+.PHONY: help dev build package run test test-frontend test-backend lint lint-frontend format format-backend install-deps update-deps check setup clean love
 
 # Detect OS
 ifeq ($(OS),Windows_NT)
     DETECTED_OS := Windows
     SHELL := pwsh.exe
     .SHELLFLAGS := -Command
+    TASK := task.exe
 else
     DETECTED_OS := $(shell uname -s)
     SHELL := /bin/bash
+    TASK := task
 endif
 
 # Default target
 help: ## Show this help message
 	@echo "MrRSS Development Makefile ($(DETECTED_OS))"
 	@echo ""
+	@echo "Wails v3 Build System - Using Task Runner"
+	@echo ""
 	@echo "Available targets:"
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
+	@echo ""
+	@echo "💡 Tip: Use 'task --list' to see all available tasks"
 
-# Development
-dev: ## Start development server
-	wails dev
+# Development (Wails v3 + Task)
+dev: ## Start development server with hot reload
+	$(TASK) dev
 
-# Building
-build: build-frontend build-backend ## Build both frontend and backend
-	wails build -skipbindings
+# Building (Wails v3 + Task)
+build: ## Build application for current platform
+	$(TASK) build
+
+package: ## Package application with installer
+	$(TASK) package
+
+run: ## Run the built application
+	$(TASK) run
 
 build-frontend: ## Build frontend only
-	cd frontend && npm run build
+	$(TASK) common:build:frontend
 
-build-backend: ## Build backend only (verify compilation)
-	go build -v ./...
+build-backend: ## Build backend only
+	go build -v -o build/bin/ ./...
 
 # Testing
 test: test-frontend test-backend ## Run all tests
@@ -42,10 +54,10 @@ test-frontend-e2e: ## Run frontend E2E tests with Cypress
 	cd frontend && npm run test:e2e
 
 test-backend: ## Run backend tests
-	go test -v -timeout=5m -cover ./internal/...
+	CGO_ENABLED=1 go test -v -timeout=5m -cover ./internal/...
 
 test-coverage: ## Run backend tests with coverage
-	go test -v -timeout=5m -coverprofile=coverage.out -covermode=atomic ./internal/...
+	CGO_ENABLED=1 go test -v -timeout=5m -coverprofile=coverage.out -covermode=atomic ./internal/...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 
@@ -98,19 +110,30 @@ update-backend-deps: ## Update backend dependencies
 setup: install-deps ## Initial project setup
 	pre-commit install
 
-# Cleanup
+# Task runner commands
+task-list: ## List all available tasks
+	$(TASK) --list
+
+task-summary: ## Show task summary
+	$(TASK) --summary build dev package
+
+icons: ## Generate platform icons
+	$(TASK) common:generate:icons
+
+bindings: ## Generate TypeScript bindings
+	$(TASK) common:generate:bindings
+
+setup-docker: ## Setup Docker for cross-compilation
+	$(TASK) common:setup:docker
+
+# Clean
 clean: ## Clean build artifacts
 ifeq ($(DETECTED_OS),Windows)
-	powershell -Command "Remove-Item -Path 'build\bin\*' -Recurse -Force -ErrorAction SilentlyContinue"
-	powershell -Command "Remove-Item -Path 'frontend\dist' -Recurse -Force -ErrorAction SilentlyContinue"
-	powershell -Command "Remove-Item -Path 'frontend\node_modules\.vite' -Recurse -Force -ErrorAction SilentlyContinue"
-	powershell -Command "Remove-Item -Path 'coverage.out', 'coverage.html' -ErrorAction SilentlyContinue"
+	-Remove-Item -Recurse -Force build/bin,frontend/dist,coverage.out,coverage.html,*.syso 2>$$null
 else
-	rm -rf build/bin/*
-	rm -rf frontend/dist
-	rm -rf frontend/node_modules/.vite
-	rm -f coverage.out coverage.html
+	rm -rf build/bin frontend/dist coverage.out coverage.html *.syso
 endif
+	@echo "✅ Cleaned build artifacts"
 
 # Development helpers
 check: lint test build ## Run full check (lint, test, build)
@@ -133,9 +156,12 @@ endif
 love: ## Show some love
 	@echo "❤️ MrRSS loves you too! ❤️"
 
-# Docker (if needed in future)
-# docker-build:
-# 	docker build -t mrrss .
+# Platform-specific builds
+build-windows: ## Build for Windows
+	$(TASK) windows:build
 
-# docker-run:
-# 	docker run -p 3000:3000 mrrss
+build-linux: ## Build for Linux
+	$(TASK) linux:build
+
+build-darwin: ## Build for macOS
+	$(TASK) darwin:build

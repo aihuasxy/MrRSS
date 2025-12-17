@@ -3,19 +3,19 @@
   <h1>MrRSS</h1>
   <p><strong>一个现代化的跨平台桌面 RSS 阅读器</strong></p>
 
-   [![Version](https://img.shields.io/badge/version-1.2.20-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
+   [![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
   [![License](https://img.shields.io/badge/license-GPLv3-green.svg)](LICENSE)
    [![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
-  [![Wails](https://img.shields.io/badge/Wails-v2-red)](https://wails.io/)
-  [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?logo=vue.js)](https://vuejs.org/)
+  [![Wails](https://img.shields.io/badge/Wails-v3%20alpha-red)](https://wails.io/)
+  [![Vue.js](https://img.shields.io/badge/Vue.js-3.5+-4FC08D?logo=vue.js)](https://vuejs.org/)
 
   <p>
     <a href="README.md">English</a> | <strong>简体中文</strong>
   </p>
 </div>
 
-> [!WARNING]
-> 软件的最新版本在 MacOS 26 上存在一定几率崩溃，建议使用更低版本的软件，我们正在调查并修复此问题。
+> [!NOTE]
+> MrRSS 已升级到 **Wails v3 (alpha)**。这带来了更好的性能、内置系统托盘支持和更好的跨平台兼容性。如果您遇到任何问题，请[在 GitHub 上报告](https://github.com/WCY-dt/MrRSS/issues)。
 
 ---
 
@@ -69,23 +69,20 @@
 在开始之前，请确保已安装以下环境：
 
 - [Go](https://go.dev/) (1.24 或更高版本)
-- [Node.js](https://nodejs.org/) (LTS 版本，带 npm)
-- [Wails](https://wails.io/docs/gettingstarted/installation) CLI
+- [Node.js](https://nodejs.org/) (20 LTS 或更高版本，带 npm)
+- [Wails v3](https://v3alpha.wails.io/getting-started/installation/) CLI
 
 **平台特定要求：**
 
-- **Linux**: 需要系统依赖（GTK、WebKit、AppIndicator）
-- **Windows**: 需要 MinGW（用于 CGO/systray 支持）
-- **macOS**: 需要 Xcode 命令行工具
+- **Linux**: GTK3、WebKit2GTK 4.1、libsoup 3.0、GCC、pkg-config
+- **Windows**: MinGW-w64（用于 CGO 支持）、NSIS（用于安装包）
+- **macOS**: Xcode 命令行工具
 
 详细安装说明请参见[构建要求](docs/BUILD_REQUIREMENTS.md)
 
 ```bash
-# Linux 快速设置（Ubuntu/Debian）：
-sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev gcc pkg-config
-
-# 对于旧版 Ubuntu（24.04 之前）：
-# sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev gcc pkg-config
+# Linux 快速设置（Ubuntu 24.04+）：
+sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev gcc pkg-config
 ```
 
 ##### 安装步骤
@@ -105,19 +102,28 @@ sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3
    cd ..
    ```
 
-3. **构建应用**
+3. **安装 Wails v3 CLI**
 
    ```bash
-   # 使用 Makefile（推荐）
+   go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+   ```
+
+4. **构建应用**
+
+   ```bash
+   # 使用 Task（推荐）
+   task build
+
+   # 或使用 Makefile
    make build
 
-   # 或手动使用 wails（需要 -skipbindings 标志）
-   wails build -skipbindings
+   # 或直接使用 wails3
+   wails3 build
    ```
 
    可执行文件将在 `build/bin` 目录下生成。
 
-4. **运行应用**
+5. **运行应用**
 
    - Windows: `build/bin/MrRSS.exe`
    - macOS: `build/bin/MrRSS.app`
@@ -154,7 +160,11 @@ sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3
 启动带有热重载的应用：
 
 ```bash
-wails dev
+# 使用 Wails v3
+wails3 dev
+
+# 或使用 Task
+task dev
 ```
 
 ### 代码质量工具

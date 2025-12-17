@@ -41,12 +41,6 @@ jobs:
             echo "This is a stable release version: $VERSION"
           fi
 
-      - name: Update version in wails.json
-        run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
-          sed -i 's/"version": ".*"/"version": "'$VERSION'"/' wails.json
-          sed -i 's/"productVersion": ".*"/"productVersion": "'$VERSION'"/' wails.json
-
       - name: Check if tag exists
         id: check_tag
         run: |
@@ -131,31 +125,50 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Desktop platforms - always build
           # Linux AMD64 build
           - os: ubuntu-24.04
             platform: linux
             arch: amd64
             ext: ''
+            build_condition: 'true'
           # Linux ARM64 build - using native ARM64 runner
           - os: ubuntu-24.04-arm
             platform: linux
             arch: arm64
             ext: ''
+            build_condition: 'true'
           # Windows AMD64 build
           - os: windows-latest
             platform: windows
             arch: amd64
             ext: '.exe'
+            build_condition: 'true'
           # Windows ARM64 build - using native ARM64 runner
           - os: windows-11-arm
             platform: windows
             arch: arm64
             ext: '.exe'
+            build_condition: 'true'
           # macOS Universal build (includes both Intel and Apple Silicon)
           - os: macos-latest
             platform: darwin
             arch: universal
             ext: '.app'
+            build_condition: 'true'
+
+          # Mobile platforms - only for Wails v3 (commented out by default)
+          # Uncomment these when you want to build mobile versions
+          # - os: macos-latest
+          #   platform: ios
+          #   arch: arm64
+          #   ext: '.ipa'
+          #   build_condition: 'wails_v3_only'
+          # - os: ubuntu-24.04
+          #   platform: android
+          #   arch: arm64
+          #   ext: '.apk'
+          #   build_condition: 'wails_v3_only'
 
     steps:
       - uses: actions/checkout@v6
@@ -180,6 +193,12 @@ jobs:
           elif [ "${{ matrix.platform }}" = "darwin" ]; then
             INSTALLER="MrRSS-${VERSION}-darwin-${{ matrix.arch }}.dmg"
             PACKAGE=""  # No package for macOS
+          elif [ "${{ matrix.platform }}" = "ios" ]; then
+            INSTALLER="MrRSS-${VERSION}-ios-${{ matrix.arch }}.ipa"
+            PACKAGE=""  # No package for iOS
+          elif [ "${{ matrix.platform }}" = "android" ]; then
+            INSTALLER="MrRSS-${VERSION}-android-${{ matrix.arch }}.apk"
+            PACKAGE=""  # No package for Android
           fi
 
           # Check if release has these assets
@@ -226,6 +245,13 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install Task (task runner)
+        if: steps.check_artifacts.outputs.skip_build == 'false'
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install Linux dependencies (AMD64)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'linux' && matrix.arch == 'amd64'
         run: |
@@ -233,7 +259,7 @@ jobs:
           sudo apt-get install -y \
             libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
+            libsoup-3.0-dev \
             gcc \
             pkg-config \
             wget \
@@ -241,11 +267,7 @@ jobs:
 
           # Verify webkit2gtk-4.1 is properly installed
           pkg-config --modversion webkit2gtk-4.1 || exit 1
-          echo "webkit2gtk-4.1 installed successfully"
-
-          # Create symlink for Wails v2 compatibility (looks for 4.0)
-          sudo ln -sf /usr/lib/x86_64-linux-gnu/pkgconfig/webkit2gtk-4.1.pc /usr/lib/x86_64-linux-gnu/pkgconfig/webkit2gtk-4.0.pc
-          echo "Created webkit2gtk-4.0 symlink for Wails compatibility"
+          echo "webkit2gtk-4.1 installed successfully for Wails v3"
 
       - name: Install Linux dependencies (ARM64)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'linux' && matrix.arch == 'arm64'
@@ -254,7 +276,7 @@ jobs:
           sudo apt-get install -y \
             libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
+            libsoup-3.0-dev \
             gcc \
             pkg-config \
             wget \
@@ -262,11 +284,7 @@ jobs:
 
           # Verify webkit2gtk-4.1 is properly installed
           pkg-config --modversion webkit2gtk-4.1 || exit 1
-          echo "webkit2gtk-4.1 installed successfully for ARM64"
-
-          # Create symlink for Wails v2 compatibility (looks for 4.0)
-          sudo ln -sf /usr/lib/aarch64-linux-gnu/pkgconfig/webkit2gtk-4.1.pc /usr/lib/aarch64-linux-gnu/pkgconfig/webkit2gtk-4.0.pc
-          echo "Created webkit2gtk-4.0 symlink for Wails compatibility"
+          echo "webkit2gtk-4.1 installed successfully for Wails v3 ARM64"
 
       - name: Install Windows dependencies (AMD64)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'windows' && matrix.arch == 'amd64'
@@ -278,29 +296,27 @@ jobs:
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'windows' && matrix.arch == 'arm64'
         run: |
           choco install mingw nsis -y
-          # MinGW is required for systray (CGO)
+          # MinGW is required for CGO
         shell: pwsh
 
-      - name: Install Wails
+      - name: Install Wails CLI
         if: steps.check_artifacts.outputs.skip_build == 'false'
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+        shell: bash
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
 
       - name: Install frontend dependencies
         if: steps.check_artifacts.outputs.skip_build == 'false'
         working-directory: ./frontend
         run: npm ci
 
-      - name: Build frontend (required for embed)
-        if: steps.check_artifacts.outputs.skip_build == 'false'
-        working-directory: ./frontend
-        run: npm run build
-
       - name: Build application (Linux)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'linux'
         env:
           CGO_ENABLED: 1
+          ARCH: ${{ matrix.arch }}
         run: |
-          wails build -clean -skipbindings -ldflags "-s -w" -platform ${{ matrix.platform }}/${{ matrix.arch }}
+          # wails3 build via Taskfile automatically handles frontend build
+          task linux:build
 
           # Verify the build
           if [ ! -f "build/bin/MrRSS" ]; then
@@ -317,8 +333,10 @@ jobs:
         shell: pwsh
         env:
           CGO_ENABLED: 1
+          ARCH: ${{ matrix.arch }}
         run: |
-          wails build -clean -skipbindings -ldflags "-s -w" -platform ${{ matrix.platform }}/${{ matrix.arch }}
+          # wails3 build via Taskfile automatically handles frontend build
+          task windows:build
 
           # Verify the build
           if (-not (Test-Path "build/bin/MrRSS.exe")) {
@@ -330,10 +348,13 @@ jobs:
 
       - name: Build application (macOS)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'darwin'
+        env:
+          CGO_ENABLED: 1
+          ARCH: ${{ matrix.arch }}
         run: |
           # macOS runners can build universal binaries natively
-          # Universal binaries include both Intel (amd64) and Apple Silicon (arm64)
-          wails build -clean -skipbindings -ldflags "-s -w" -platform ${{ matrix.platform }}/${{ matrix.arch }}
+          # wails3 build via Taskfile automatically handles frontend build
+          task darwin:build
 
       - name: Create installer (Windows)
         if: steps.check_artifacts.outputs.skip_build == 'false' && matrix.platform == 'windows'

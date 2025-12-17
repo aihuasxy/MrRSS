@@ -3,19 +3,19 @@
   <h1>MrRSS</h1>
   <p><strong>A Modern, Cross-Platform Desktop RSS Reader</strong></p>
 
-   [![Version](https://img.shields.io/badge/version-1.2.20-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
+   [![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
   [![License](https://img.shields.io/badge/license-GPLv3-green.svg)](LICENSE)
    [![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
-  [![Wails](https://img.shields.io/badge/Wails-v2-red)](https://wails.io/)
-  [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?logo=vue.js)](https://vuejs.org/)
+  [![Wails](https://img.shields.io/badge/Wails-v3%20alpha-red)](https://wails.io/)
+  [![Vue.js](https://img.shields.io/badge/Vue.js-3.5+-4FC08D?logo=vue.js)](https://vuejs.org/)
 
   <p>
     <strong>English</strong> | <a href="README_zh.md">简体中文</a>
   </p>
 </div>
 
-> [!WARNING]
-> The latest version of the software has a certain probability of crashing on MacOS 26. It is recommended to use a lower version of the software. We are investigating and fixing this issue.
+> [!NOTE]
+> MrRSS has been upgraded to **Wails v3 (alpha)**. This brings improved performance, built-in system tray support, and better cross-platform compatibility. If you encounter any issues, please [report them on GitHub](https://github.com/WCY-dt/MrRSS/issues).
 
 ---
 
@@ -69,23 +69,20 @@ Download the latest installer for your platform from the [Releases](https://gith
 Before you begin, ensure you have the following installed:
 
 - [Go](https://go.dev/) (1.24 or higher)
-- [Node.js](https://nodejs.org/) (LTS version with npm)
-- [Wails](https://wails.io/docs/gettingstarted/installation) CLI
+- [Node.js](https://nodejs.org/) (20 LTS or higher with npm)
+- [Wails v3](https://v3alpha.wails.io/getting-started/installation/) CLI
 
 **Platform-specific requirements:**
 
-- **Linux**: System dependencies required (GTK, WebKit, AppIndicator)
-- **Windows**: MinGW required (for CGO/systray support)
+- **Linux**: GTK3, WebKit2GTK 4.1, libsoup 3.0, GCC, pkg-config
+- **Windows**: MinGW-w64 (for CGO support), NSIS (for installers)
 - **macOS**: Xcode Command Line Tools
 
 For detailed installation instructions, see [Build Requirements](docs/BUILD_REQUIREMENTS.md)
 
 ```bash
-# Quick setup for Linux (Ubuntu/Debian):
-sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev gcc pkg-config
-
-# For older Ubuntu versions (before 24.04):
-# sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev gcc pkg-config
+# Quick setup for Linux (Ubuntu 24.04+):
+sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev gcc pkg-config
 ```
 
 ### Installation
@@ -105,19 +102,28 @@ sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3
    cd ..
    ```
 
-3. **Build the application**
+3. **Install Wails v3 CLI**
 
    ```bash
-   # Using Makefile (recommended)
+   go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+   ```
+
+4. **Build the application**
+
+   ```bash
+   # Using Task (recommended)
+   task build
+
+   # Or using Makefile
    make build
 
-   # Or manually with wails (requires -skipbindings flag)
-   wails build -skipbindings
+   # Or directly with wails3
+   wails3 build
    ```
 
    The executable will be created in the `build/bin` directory.
 
-4. **Run the application**
+5. **Run the application**
 
    - Windows: `build/bin/MrRSS.exe`
    - macOS: `build/bin/MrRSS.app`
@@ -154,7 +160,11 @@ This ensures your data persists across application updates and reinstalls.
 Start the application with hot reloading:
 
 ```bash
-wails dev
+# Using Wails v3
+wails3 dev
+
+# Or using Task
+task dev
 ```
 
 ### Code Quality Tools

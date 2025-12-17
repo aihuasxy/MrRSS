@@ -1,0 +1,120 @@
+version: '3'
+
+includes:
+  common: ../Taskfile.yml
+
+vars:
+  # Signing configuration - edit these values for your project
+  # SIGN_IDENTITY: "Developer ID Application: Your Name (TEAM_ID)"
+  # NOTARIZATION_PROFILE: "notarization-profile-name"
+  #
+  # Password/API Key is stored securely in system keychain. Run: wails3 setup signing
+
+tasks:
+  build:
+    summary: Builds the application for macOS
+    deps:
+      - task: common:go:mod:tidy
+      - task: common:build:frontend
+        vars:
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
+          DEV:
+            ref: .DEV
+      - task: common:generate:icons
+    cmds:
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}
+      - task: create:app:bundle
+    vars:
+      BUILD_FLAGS: '{{if eq .DEV "true"}}-buildvcs=false -gcflags=all="-l"{{else}}-tags production -trimpath -buildvcs=false -ldflags="-w -s"{{end}}'
+    env:
+      GOOS: darwin
+      CGO_ENABLED: 1
+      GOARCH: '{{.ARCH | default ARCH}}'
+
+  create:app:bundle:
+    summary: Creates a macOS .app bundle
+    internal: true
+    cmds:
+      - mkdir -p {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS
+      - mkdir -p {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources
+      - cp {{.BIN_DIR}}/{{.APP_NAME}} {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS/
+      - cp build/darwin/icons.icns {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources/
+      - |
+        cat > {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Info.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+          <key>CFBundleExecutable</key>
+          <string>{{.APP_NAME}}</string>
+          <key>CFBundleIconFile</key>
+          <string>icons.icns</string>
+          <key>CFBundleIdentifier</key>
+          <string>com.mrrss.app</string>
+          <key>CFBundleName</key>
+          <string>{{.APP_NAME}}</string>
+          <key>CFBundlePackageType</key>
+          <string>APPL</string>
+          <key>CFBundleShortVersionString</key>
+          <string>1.3.0-alpha.1</string>
+          <key>CFBundleVersion</key>
+          <string>1.3.0-alpha.1</string>
+          <key>LSMinimumSystemVersion</key>
+          <string>10.13</string>
+          <key>NSHighResolutionCapable</key>
+          <true/>
+          <key>NSSupportsAutomaticGraphicsSwitching</key>
+          <true/>
+        </dict>
+        </plist>
+        EOF
+
+  package:
+    summary: Packages the application into a DMG
+    deps:
+      - task: build
+    cmds:
+      - task: create:dmg
+
+  create:dmg:
+    summary: Creates a DMG installer
+    cmds:
+      - |
+        if [ -f "build/macos/create-dmg.sh" ]; then
+          chmod +x build/macos/create-dmg.sh
+          ./build/macos/create-dmg.sh
+        else
+          echo "Warning: create-dmg.sh not found, skipping DMG creation"
+        fi
+
+  run:
+    cmds:
+      - '{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS/{{.APP_NAME}}'
+
+  sign:
+    summary: Signs the macOS application
+    desc: |
+      Signs the .app bundle with an Apple Developer certificate.
+      Configure SIGN_IDENTITY in the vars section at the top of this file.
+    deps:
+      - task: build
+    cmds:
+      - codesign --deep --force --verify --verbose --sign "{{.SIGN_IDENTITY}}" --options runtime {{.BIN_DIR}}/{{.APP_NAME}}.app
+    preconditions:
+      - sh: '[ -n "{{.SIGN_IDENTITY}}" ]'
+        msg: "SIGN_IDENTITY is required. Set it in the vars section at the top of build/darwin/Taskfile.yml"
+
+  notarize:
+    summary: Notarizes the macOS application
+    desc: |
+      Notarizes the .app bundle or DMG with Apple's notarization service.
+      Configure NOTARIZATION_PROFILE in the vars section at the top of this file.
+    deps:
+      - task: sign
+    cmds:
+      - xcrun notarytool submit {{.BIN_DIR}}/{{.APP_NAME}}.app --keychain-profile "{{.NOTARIZATION_PROFILE}}" --wait
+      - xcrun stapler staple {{.BIN_DIR}}/{{.APP_NAME}}.app
+    preconditions:
+      - sh: '[ -n "{{.NOTARIZATION_PROFILE}}" ]'
+        msg: "NOTARIZATION_PROFILE is required. Set it in the vars section at the top of build/darwin/Taskfile.yml"

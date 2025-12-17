@@ -141,6 +141,7 @@ export default [
       'src/wailsjs/',
       'cypress/',
       'public/',
+      'bindings/',
     ],
   },
 ];

@@ -8,7 +8,7 @@
 
 ### Tech Stack
 
-- **Backend**: Go 1.24+ with Wails v2.11+ framework, SQLite with `modernc.org/sqlite`
+- **Backend**: Go 1.24+ with Wails v3 (alpha) framework, SQLite with `modernc.org/sqlite`
 - **Frontend**: Vue 3.5+ Composition API, Pinia, Tailwind CSS 3.3+, Vite 5+, TypeScript
 - **Communication**: HTTP REST API (not Wails bindings)
 - **Icons**: Phosphor Icons | **I18n**: vue-i18n (English/Chinese)
@@ -95,7 +95,7 @@ MrRSS/
 
 ### Backend Architecture (Go 1.24+)
 
-- **Framework**: Wails v2.11+ with HTTP API endpoints (not Wails bindings)
+- **Framework**: Wails v3 with HTTP API endpoints (not Wails bindings)
 - **Database**: SQLite with `modernc.org/sqlite`, WAL mode enabled
 - **RSS Parsing**: `gofeed` library with concurrent fetching
 - **Translation**: Google Translate + DeepL + Baidu Translation + AI-based translation
@@ -117,7 +117,7 @@ MrRSS/
 
 ### Getting Started
 
-1. **Prerequisites**: Go 1.24+, Node.js 18+, Wails CLI v2.11+
+1. **Prerequisites**: Go 1.24+, Node.js 18+, Wails CLI v3
 2. **Setup**: `go mod download && cd frontend && npm install`
 3. **Development**: `wails dev` (hot reload enabled)
 4. **Build**: Use `make build` or `wails build -skipbindings` (production build)
