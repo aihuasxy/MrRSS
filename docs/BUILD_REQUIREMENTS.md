@@ -93,7 +93,7 @@ go build -ldflags "-H=windowsgui"
 Or with Wails:
 
 ```bash
-wails build -ldflags "-H=windowsgui"
+wails3 build -ldflags "-H=windowsgui"
 ```
 
 #### Runtime Dependencies

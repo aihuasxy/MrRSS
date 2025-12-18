@@ -36,7 +36,7 @@ cypress/
 
    ```bash
    # From the project root
-   wails dev
+   wails3 dev
    # or
    go run main.go
    ```

@@ -415,23 +415,6 @@ scheduleCleanup := func(filePath string, delay time.Duration) {
 }
 ```
 
-## Version Management (CRITICAL)
-
-When updating version, modify ALL of these files:
-
-1. `internal/version/version.go` - Version constant
-2. `wails.json` - "version" and "info.productVersion" fields
-3. `frontend/package.json` - "version" field
-4. `frontend/package-lock.json` - "version" field
-5. `frontend/src/components/modals/settings/about/AboutTab.vue` - appVersion ref default
-6. `website/package.json` - "version" field
-7. `website/package-lock.json` - "version" field
-8. `README.md` - Version badge
-9. `README_zh.md` - Version badge
-10. `CHANGELOG.md` - Add new version entry
-
-📚 **Detailed Guide**: See [VERSION_MANAGEMENT.md](../docs/VERSION_MANAGEMENT.md)
-
 ## Don'ts
 
 ❌ **Don't**:
@@ -477,9 +460,9 @@ When updating version, modify ALL of these files:
 ## Quick Reference
 
 **Build Commands**:
-- Development: `wails dev`
-- Production Build: `make build` or `wails build -skipbindings`
-- Important: Always use `-skipbindings` flag with `wails build` (MrRSS uses HTTP API, not Wails bindings)
+- Development: `wails3 dev`
+- Production Build: `wails3 build`
+- Important: MrRSS uses HTTP API, not Wails bindings
 
 **Store Access**: `const store = useAppStore()`
 **i18n**: `const { t } = useI18n()`

@@ -1,5 +1,5 @@
 import { ref, onMounted } from 'vue';
-import { Environment } from '@/wailsjs/wailsjs/runtime/runtime';
+import { System } from '@wailsio/runtime';
 
 const isMacOS = ref(false);
 const isWindows = ref(false);
@@ -13,10 +13,10 @@ export function usePlatform() {
     }
 
     try {
-      const env = await Environment();
-      isMacOS.value = env.platform === 'darwin';
-      isWindows.value = env.platform === 'windows';
-      isLinux.value = env.platform === 'linux';
+      const env = await System.Environment();
+      isMacOS.value = env.OS === 'darwin';
+      isWindows.value = env.OS === 'windows';
+      isLinux.value = env.OS === 'linux';
       platformDetected.value = true;
     } catch (error) {
       console.error('Failed to detect platform:', error);

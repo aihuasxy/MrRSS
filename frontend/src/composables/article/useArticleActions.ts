@@ -1,4 +1,5 @@
-import { BrowserOpenURL } from '@/wailsjs/wailsjs/runtime/runtime';
+import { openInBrowser } from '@/utils/browser';
+import { copyArticleLink, copyArticleTitle } from '@/utils/clipboard';
 import { useAppStore } from '@/stores/app';
 import type { Article } from '@/types/models';
 import type { Composer } from 'vue-i18n';
@@ -55,6 +56,17 @@ export function useArticleActions(
               action: 'toggleHide',
               icon: article.is_hidden ? 'ph-eye' : 'ph-eye-slash',
               danger: !article.is_hidden,
+            },
+            { separator: true },
+            {
+              label: t('copyLink'),
+              action: 'copyLink',
+              icon: 'ph-link',
+            },
+            {
+              label: t('copyTitle'),
+              action: 'copyTitle',
+              icon: 'ph-text-t',
             },
             { separator: true },
             {
@@ -164,8 +176,22 @@ export function useArticleActions(
           detail: { action: renderAction },
         })
       );
+    } else if (action === 'copyLink') {
+      const success = await copyArticleLink(article.url);
+      if (success) {
+        window.showToast(t('copiedToClipboard'), 'success');
+      } else {
+        window.showToast(t('failedToCopy'), 'error');
+      }
+    } else if (action === 'copyTitle') {
+      const success = await copyArticleTitle(article.title);
+      if (success) {
+        window.showToast(t('copiedToClipboard'), 'success');
+      } else {
+        window.showToast(t('failedToCopy'), 'error');
+      }
     } else if (action === 'openBrowser') {
-      BrowserOpenURL(article.url);
+      openInBrowser(article.url);
     }
   }
 

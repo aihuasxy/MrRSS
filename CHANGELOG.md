@@ -5,6 +5,24 @@ All notable changes to MrRSS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2025-12-18
+
+### Added
+
+- Supported copying article link and title to clipboard from article actions menu.
+
+### Changed
+
+- Replace the following functionality with a native implementation using wails3:
+  - Open link in default browser
+  - Window events handling (minimize, maximize, close) and management
+  - Native window context menu and title bar on MacOS
+
+### Fixed
+
+- Fixed the issue where super loooooooong article titles causing layout breaking in article list.
+- Fixed the issue where cutting long article titles in chinese does not work correctly.
+
 ## [1.3.2] - 2025-12-17
 
 ### Fixed

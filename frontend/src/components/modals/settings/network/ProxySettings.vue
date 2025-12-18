@@ -25,6 +25,10 @@ const emit = defineEmits<{
       {{ t('proxySettings') }}
     </label>
 
+    <div class="text-xs sm:text-sm text-text-secondary mb-3 sm:mb-4">
+      {{ t('systemProxyInfo') }}
+    </div>
+
     <!-- Enable Proxy Toggle -->
     <div class="setting-item">
       <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">

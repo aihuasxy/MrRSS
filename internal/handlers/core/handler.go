@@ -10,6 +10,8 @@ import (
 	"MrRSS/internal/discovery"
 	"MrRSS/internal/feed"
 	"MrRSS/internal/translation"
+
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // Discovery timeout constants
@@ -35,6 +37,7 @@ type Handler struct {
 	Fetcher          *feed.Fetcher
 	Translator       translation.Translator
 	DiscoveryService *discovery.Service
+	App              *application.App // Wails app instance for browser integration
 
 	// Discovery state tracking for polling-based progress
 	DiscoveryMu          sync.RWMutex
@@ -50,4 +53,10 @@ func NewHandler(db *database.DB, fetcher *feed.Fetcher, translator translation.T
 		Translator:       translator,
 		DiscoveryService: discovery.NewService(),
 	}
+}
+
+// SetApp sets the Wails application instance for browser integration.
+// This is called after app initialization in main.go.
+func (h *Handler) SetApp(app *application.App) {
+	h.App = app
 }

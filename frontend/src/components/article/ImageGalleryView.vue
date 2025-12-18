@@ -4,7 +4,7 @@ import { useAppStore } from '@/stores/app';
 import { useI18n } from 'vue-i18n';
 import type { Article } from '@/types/models';
 import { PhImage, PhHeart, PhList, PhFloppyDisk, PhGlobe } from '@phosphor-icons/vue';
-import { BrowserOpenURL } from '@/wailsjs/wailsjs/runtime/runtime';
+import { openInBrowser } from '@/utils/browser';
 
 const store = useAppStore();
 const { t } = useI18n();
@@ -237,7 +237,7 @@ async function downloadImage(article: Article) {
 
 // Open original article
 function openOriginal(article: Article) {
-  BrowserOpenURL(article.url);
+  openInBrowser(article.url);
   closeContextMenu();
 }
 

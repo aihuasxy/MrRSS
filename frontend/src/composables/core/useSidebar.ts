@@ -1,7 +1,7 @@
 import { computed, ref, watch, type Ref } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useI18n } from 'vue-i18n';
-import { BrowserOpenURL } from '@/wailsjs/wailsjs/runtime/runtime';
+import { openInBrowser } from '@/utils/browser';
 import type { Feed } from '@/types/models';
 
 interface TreeNode {
@@ -142,7 +142,7 @@ export function useSidebar() {
       window.dispatchEvent(new CustomEvent('show-edit-feed', { detail: feed }));
     } else if (action === 'openWebsite') {
       const urlToOpen = feed.website_url || feed.url;
-      BrowserOpenURL(urlToOpen);
+      openInBrowser(urlToOpen);
     } else if (action === 'discover') {
       window.dispatchEvent(new CustomEvent('show-discover-blogs', { detail: feed }));
     }

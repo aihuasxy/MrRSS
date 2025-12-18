@@ -34,11 +34,7 @@ When a folder contains too many files (typically over 10-15 files), create subfo
 Before completing any significant change, verify the build:
 
 ```bash
-# Run full build check
-wails build -skipbindings
-
-# Or use the Makefile
-make build
+wails3 build
 ```
 
 This ensures the application can be properly packaged and distributed.

@@ -21,6 +21,7 @@ import (
 	"MrRSS/internal/database"
 	"MrRSS/internal/feed"
 	article "MrRSS/internal/handlers/article"
+	browser "MrRSS/internal/handlers/browser"
 	handlers "MrRSS/internal/handlers/core"
 	discovery "MrRSS/internal/handlers/discovery"
 	feedhandlers "MrRSS/internal/handlers/feed"
@@ -202,6 +203,7 @@ func main() {
 	apiMux.HandleFunc("/api/window/save", func(w http.ResponseWriter, r *http.Request) { window.HandleSaveWindowState(h, w, r) })
 	apiMux.HandleFunc("/api/network/detect", func(w http.ResponseWriter, r *http.Request) { networkhandlers.HandleDetectNetwork(h, w, r) })
 	apiMux.HandleFunc("/api/network/info", func(w http.ResponseWriter, r *http.Request) { networkhandlers.HandleGetNetworkInfo(h, w, r) })
+	apiMux.HandleFunc("/api/browser/open", func(w http.ResponseWriter, r *http.Request) { browser.HandleOpenURL(h, w, r) })
 
 	// Static Files
 	log.Println("Setting up static files...")
@@ -296,6 +298,10 @@ func main() {
 		},
 	})
 
+	// Set app instance to handler for browser integration
+	h.SetApp(app)
+	log.Println("Browser integration enabled")
+
 	// Get window dimensions from stored state or defaults
 	windowWidth := 1024
 	windowHeight := 768
@@ -347,8 +353,13 @@ func main() {
 		Height: windowHeight,
 		URL:    "/",
 		Mac: application.MacWindow{
-			TitleBar:                application.MacTitleBarHiddenInset,
-			InvisibleTitleBarHeight: 60,
+			TitleBar: application.MacTitleBar{
+				AppearsTransparent:   true,
+				HideTitle:            true,
+				FullSizeContent:      true,
+				UseToolbar:           false,
+				HideToolbarSeparator: true,
+			},
 		},
 		BackgroundColour: application.NewRGB(255, 255, 255),
 	}

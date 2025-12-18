@@ -1,7 +1,7 @@
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useI18n } from 'vue-i18n';
-import { BrowserOpenURL } from '@/wailsjs/wailsjs/runtime/runtime';
+import { openInBrowser } from '@/utils/browser';
 import type { Article } from '@/types/models';
 import { proxyImagesInHtml, isMediaCacheEnabled } from '@/utils/mediaProxy';
 
@@ -120,7 +120,7 @@ export function useArticleDetail() {
   }
 
   function openOriginal() {
-    if (article.value) BrowserOpenURL(article.value.url);
+    if (article.value) openInBrowser(article.value.url);
   }
 
   async function toggleContentView() {
@@ -355,7 +355,7 @@ export function useArticleDetail() {
             const href = newLink.getAttribute('href');
             if (href) {
               try {
-                BrowserOpenURL(href);
+                openInBrowser(href);
               } catch (error) {
                 console.error('Error opening URL:', href, error);
               }

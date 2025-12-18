@@ -1,6 +1,6 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useAppStore } from '@/stores/app';
-import { BrowserOpenURL } from '@/wailsjs/wailsjs/runtime/runtime';
+import { openInBrowser } from '@/utils/browser';
 
 export interface KeyboardShortcuts {
   nextArticle: string;
@@ -161,7 +161,7 @@ export function useKeyboardShortcuts(callbacks: KeyboardShortcutCallbacks) {
   function openCurrentArticleInBrowser(): void {
     const article = store.articles.find((a) => a.id === store.currentArticleId);
     if (article && article.url) {
-      BrowserOpenURL(article.url);
+      openInBrowser(article.url);
     }
   }
 

@@ -77,17 +77,19 @@ onMounted(async () => {
       <div class="flex items-start gap-1.5 sm:gap-2">
         <h4
           v-if="!article.translated_title || article.translated_title === article.title"
-          class="flex-1 m-0 mb-1 sm:mb-1.5 text-sm sm:text-base font-semibold leading-snug text-text-primary"
+          class="flex-1 m-0 mb-1 sm:mb-1.5 text-sm sm:text-base font-semibold leading-snug text-text-primary article-title"
         >
           {{ article.title }}
         </h4>
         <div v-else class="flex-1">
           <h4
-            class="m-0 mb-0.5 sm:mb-1 text-sm sm:text-base font-semibold leading-snug text-text-primary"
+            class="m-0 mb-0.5 sm:mb-1 text-sm sm:text-base font-semibold leading-snug text-text-primary article-title"
           >
             {{ article.translated_title }}
           </h4>
-          <div class="text-[10px] sm:text-xs text-text-secondary italic mb-0.5 sm:mb-1">
+          <div
+            class="text-[10px] sm:text-xs text-text-secondary italic mb-0.5 sm:mb-1 article-title"
+          >
             {{ article.title }}
           </div>
         </div>
@@ -162,5 +164,14 @@ onMounted(async () => {
 
 .article-card.hidden:hover {
   @apply opacity-80;
+}
+
+.article-title {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  overflow: hidden;
 }
 </style>

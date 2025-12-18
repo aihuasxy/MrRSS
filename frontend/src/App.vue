@@ -19,7 +19,6 @@ import { useKeyboardShortcuts } from './composables/ui/useKeyboardShortcuts';
 import { useContextMenu } from './composables/ui/useContextMenu';
 import { useResizablePanels } from './composables/ui/useResizablePanels';
 import { useWindowState } from './composables/core/useWindowState';
-import { usePlatform } from './composables/core/usePlatform';
 import type { Feed } from './types/models';
 
 const store = useAppStore();
@@ -49,12 +48,6 @@ const { sidebarWidth, articleListWidth, startResizeSidebar, startResizeArticleLi
 const windowState = useWindowState();
 windowState.init();
 
-// Track fullscreen state for macOS
-const isFullscreen = ref(false);
-
-// Detect platform for MacOS-specific styles
-const { isMacOS } = usePlatform();
-
 // Initialize keyboard shortcuts
 const { shortcuts } = useKeyboardShortcuts({
   onOpenSettings: () => {
@@ -75,29 +68,6 @@ onMounted(async () => {
 
   // Initialize theme system immediately (lightweight)
   store.initTheme();
-
-  // Monitor fullscreen state for macOS
-  if (isMacOS.value) {
-    const checkFullscreen = async () => {
-      try {
-        const { WindowIsFullscreen } = await import('@/wailsjs/wailsjs/runtime/runtime');
-        isFullscreen.value = await WindowIsFullscreen();
-      } catch (error) {
-        console.error('Failed to check fullscreen state:', error);
-      }
-    };
-
-    // Check initial state
-    checkFullscreen();
-
-    // Poll for fullscreen state changes (every 500ms)
-    const fullscreenInterval = setInterval(checkFullscreen, 500);
-
-    // Cleanup on unmount
-    window.addEventListener('beforeunload', () => {
-      clearInterval(fullscreenInterval);
-    });
-  }
 
   // Load remaining settings (theme and other settings are already loaded in main.ts)
   let updateInterval = 10;
@@ -208,7 +178,6 @@ function onFeedUpdated(): void {
 <template>
   <div
     class="app-container flex h-screen w-full bg-bg-primary text-text-primary overflow-hidden"
-    :class="{ 'macos-padding': isMacOS && !isFullscreen }"
     :style="{
       '--sidebar-width': sidebarWidth + 'px',
       '--article-list-width': articleListWidth + 'px',
@@ -296,33 +265,6 @@ function onFeedUpdated(): void {
 </template>
 
 <style>
-/* MacOS-specific styles */
-.app-container.macos-padding {
-  padding-top: 32px; /* Space for MacOS window controls */
-}
-
-/* MacOS window dragging support - enable drag on top sections only */
-.app-container.macos-padding .sidebar > div:first-child,
-.app-container.macos-padding .article-list > div:first-child,
-.app-container.macos-padding main > div > div:first-child {
-  -webkit-app-region: drag;
-}
-
-/* Prevent drag on interactive elements within draggable areas on MacOS */
-.app-container.macos-padding button,
-.app-container.macos-padding input,
-.app-container.macos-padding textarea,
-.app-container.macos-padding select,
-.app-container.macos-padding a,
-.app-container.macos-padding .resizer,
-.app-container.macos-padding [role='button'],
-.app-container.macos-padding img[role='button'],
-.app-container.macos-padding .clickable,
-.app-container.macos-padding h2,
-.app-container.macos-padding h3 {
-  -webkit-app-region: no-drag;
-}
-
 .toast-container {
   position: fixed;
   top: 10px;
@@ -336,8 +278,7 @@ function onFeedUpdated(): void {
   pointer-events: none;
 }
 
-/* Adjust toast position for MacOS (only when padding is applied) */
-.app-container.macos-padding .toast-container {
+.toast-container > * {
   top: 42px; /* Account for MacOS top padding */
 }
 

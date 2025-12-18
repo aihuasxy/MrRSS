@@ -1,6 +1,6 @@
 {
   "name": "mrrss-website",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Website for MrRSS",
   "type": "module",
   "scripts": {

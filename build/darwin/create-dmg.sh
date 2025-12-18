@@ -12,7 +12,7 @@ set -e
 
 APP_NAME="MrRSS"
 # Get version from wails.json if available, otherwise use default
-VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' wails.json 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)".*/\1/' || echo "1.3.2")
+VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' wails.json 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)".*/\1/' || echo "1.3.3")
 APP_PUBLISHER="Ch3nyang"
 APP_URL="https://github.com/WCY-dt/MrRSS"
 APP_DESCRIPTION="A Modern, Cross-Platform Desktop RSS Reader"
@@ -29,7 +29,7 @@ echo ""
 # Check if app exists
 if [ ! -d "${APP_PATH}" ]; then
     echo "Error: Application not found at ${APP_PATH}"
-    echo "Please build the application first with: wails build -platform darwin/universal"
+    echo "Please build the application first with: wails3 build -platform darwin/universal"
     exit 1
 fi
 

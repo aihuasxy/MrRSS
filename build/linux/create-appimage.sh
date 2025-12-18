@@ -13,7 +13,7 @@ set -e
 
 APP_NAME="MrRSS"
 # Get version from wails.json if available, otherwise use default
-VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' wails.json 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)".*/\1/' || echo "1.3.2")
+VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' wails.json 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)".*/\1/' || echo "1.3.3")
 # Get architecture from environment variable or default to amd64
 ARCH=${ARCH:-amd64}
 echo "Target architecture: ${ARCH}"
@@ -33,7 +33,7 @@ echo ""
 # Check if binary exists
 if [ ! -f "${BUILD_DIR}/${APP_NAME}" ]; then
     echo "Error: Binary not found at ${BUILD_DIR}/${APP_NAME}"
-    echo "Please build the application first with: wails build -platform linux/amd64"
+    echo "Please build the application first with: wails3 build -platform linux/amd64"
     exit 1
 fi
 

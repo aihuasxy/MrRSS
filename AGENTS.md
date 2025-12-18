@@ -1,6 +1,6 @@
 # AI Agent Guidelines for MrRSS
 
-> **Quick Links**: [Architecture](docs/ARCHITECTURE.md) | [Code Patterns](docs/CODE_PATTERNS.md) | [Testing](docs/TESTING.md) | [Build Requirements](docs/BUILD_REQUIREMENTS.md) | [Custom Scripts](docs/CUSTOM_SCRIPTS.md) | [Version Management](docs/VERSION_MANAGEMENT.md)
+> **Quick Links**: [Architecture](docs/ARCHITECTURE.md) | [Code Patterns](docs/CODE_PATTERNS.md) | [Testing](docs/TESTING.md) | [Build Requirements](docs/BUILD_REQUIREMENTS.md) | [Custom Scripts](docs/CUSTOM_SCRIPTS.md)
 
 ## Project Overview
 
@@ -119,10 +119,8 @@ MrRSS/
 
 1. **Prerequisites**: Go 1.24+, Node.js 18+, Wails CLI v3
 2. **Setup**: `go mod download && cd frontend && npm install`
-3. **Development**: `wails dev` (hot reload enabled)
-4. **Build**: Use `make build` or `wails build -skipbindings` (production build)
-   - **Important**: MrRSS uses HTTP REST API instead of Wails bindings, so always use the `-skipbindings` flag when calling `wails build` directly
-   - The Makefile automatically includes this flag
+3. **Development**: `wails3 dev` (hot reload enabled)
+4. **Build**: Use `wails3 build` (production build)
 
 ### Development Scripts
 
@@ -162,22 +160,7 @@ When making changes, follow these guidelines:
 - **File Length**: When a file becomes too long (typically over 300-400 lines), consider splitting it into smaller, focused modules
 - **Folder Organization**: When a folder contains too many files (typically over 10-15 files), create subfolders to organize related functionality
 - **Refactoring**: Extract reusable logic into composables (frontend) or separate packages (backend)
-- **Build Verification**: Before completing any change, run `wails build -skipbindings` to verify the application can be built and packaged correctly
-
-### Version Management (CRITICAL)
-
-When updating version, modify ALL of these files:
-
-1. `internal/version/version.go` - Version constant
-2. `wails.json` - "version" and "info.productVersion" fields
-3. `frontend/package.json` - "version" field
-4. `frontend/package-lock.json` - "version" field
-5. `frontend/src/components/modals/settings/about/AboutTab.vue` - appVersion ref default
-6. `website/package.json` - "version" field
-7. `website/package-lock.json` - "version" field
-8. `README.md` - Version badge
-9. `README_zh.md` - Version badge
-10. `CHANGELOG.md` - Add new version entry
+- **Build Verification**: Before completing any change, run `wails3 build` to verify the application can be built and packaged correctly
 
 ### Settings Management (CRITICAL)
 

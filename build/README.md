@@ -303,17 +303,6 @@ npm install
 npm run build
 ```
 
-## Migration from Wails v2
-
-If upgrading from Wails v2:
-
-1. **Update go.mod**: Already uses Wails v3
-2. **Install Task**: `go install github.com/go-task/task/v3/cmd/task@latest`
-3. **Build configuration**: Already configured in `build/config.yml`
-4. **Update build commands**:
-   - Old: `wails build`
-   - New: `task build` or `wails3 build`
-
 ## Resources
 
 - [Wails v3 Documentation](https://v3.wails.io/)
