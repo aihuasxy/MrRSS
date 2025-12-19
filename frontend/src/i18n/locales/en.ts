@@ -119,6 +119,7 @@ const en: TranslationMessages = {
   settingsTitle: 'Settings',
   general: 'General',
   feeds: 'Feeds',
+  ai: 'AI',
   about: 'About',
 
   // General Settings
@@ -206,21 +207,35 @@ const en: TranslationMessages = {
   baiduSecretKey: 'Baidu Secret Key',
   baiduSecretKeyDesc: 'Enter your Baidu Translate Secret Key',
   baiduSecretKeyPlaceholder: 'Enter your Secret Key',
+  // AI Settings Tab
+  aiIsDanger:
+    'Using AI services may incur costs, and some features may consume a significant number of tokens. Please ensure you understand the associated cost structure and monitor your usage accordingly.',
+  aiSettings: 'AI Settings',
+  aiSettingsDesc:
+    'Configure global AI settings used by translation and summarization features. These settings apply to both translation and summary when AI provider is selected.',
   aiTranslation: 'AI Translation',
   aiApiKey: 'AI API Key',
-  aiApiKeyDesc: 'Enter your AI service API key (OpenAI, Claude, etc.)',
+  aiApiKeyDesc: 'Enter your AI service API key.',
   aiApiKeyPlaceholder: 'Enter your API key',
   aiEndpoint: 'API Endpoint',
-  aiEndpointDesc:
-    'API endpoint URL (leave empty for OpenAI default). Local endpoints (localhost, 127.0.0.1) can use HTTP.',
+  aiEndpointDesc: 'API endpoint URL. Local endpoints also supported.',
   aiEndpointPlaceholder: 'https://api.openai.com/v1',
   aiModel: 'Model Name',
-  aiModelDesc: 'AI model to use for translation',
+  aiModelDesc: 'AI model to use for translation and summarization',
   aiModelPlaceholder: 'gpt-4o-mini',
   aiSystemPrompt: 'Custom System Prompt',
   aiSystemPromptDesc: 'Custom system prompt for AI translation',
   aiSystemPromptPlaceholder:
     'Default: You are a translator. Translate the given text accurately. Output ONLY the translated text, nothing else.',
+  aiTranslationPrompt: 'Translation Prompt',
+  aiTranslationPromptDesc: 'Custom system prompt for AI translation',
+  aiTranslationPromptPlaceholder:
+    'You are a translator. Translate the given text accurately. Output ONLY the translated text, nothing else.',
+  aiSummaryPrompt: 'Summary Prompt',
+  aiSummaryPromptDesc: 'Custom system prompt for AI summarization',
+  aiSummaryPromptPlaceholder:
+    'You are a summarizer. Generate a concise summary of the given text. Output ONLY the summary, nothing else.',
+  aiSettingsConfiguredInAITab: 'AI API Key, Endpoint, and Model are configured in the AI tab.',
   aiUsage: 'AI Usage',
   aiUsageTokens: 'Tokens Used',
   aiUsageTokensDesc: 'Total AI tokens consumed for translation and summarization',
@@ -228,14 +243,18 @@ const en: TranslationMessages = {
   aiUsageLimitDesc:
     'Maximum tokens allowed (0 = unlimited). When reached, falls back to free alternatives.',
   aiUsageLimitPlaceholder: '0',
+  setUsageLimit: 'Set Usage Limit',
+  setUsageLimitDesc: 'Configure maximum tokens allowed (0 = unlimited)',
   aiUsageReset: 'Reset Usage',
   aiUsageResetConfirm: 'Are you sure you want to reset the AI usage counter?',
   aiUsageResetSuccess: 'AI usage counter reset successfully',
   aiUsageResetError: 'Failed to reset AI usage counter',
   aiUsageLimitReached: 'AI usage limit reached. Using free alternatives.',
   aiUsageFallback: 'Using free alternative due to AI limit',
+  aiSettingsIncomplete: 'AI settings incomplete',
   tokens: 'tokens',
   unlimited: 'Unlimited',
+  progress: 'Progress',
   targetLanguage: 'Target Language',
   targetLanguageDesc: 'Language to translate article titles to',
   language: 'Language',

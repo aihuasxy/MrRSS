@@ -25,7 +25,8 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 		aiAPIKey, _ := h.DB.GetEncryptedSetting("ai_api_key")
 		aiEndpoint, _ := h.DB.GetSetting("ai_endpoint")
 		aiModel, _ := h.DB.GetSetting("ai_model")
-		aiSystemPrompt, _ := h.DB.GetSetting("ai_system_prompt")
+		aiTranslationPrompt, _ := h.DB.GetSetting("ai_translation_prompt")
+		aiSummaryPrompt, _ := h.DB.GetSetting("ai_summary_prompt")
 		aiUsageTokens, _ := h.DB.GetSetting("ai_usage_tokens")
 		aiUsageLimit, _ := h.DB.GetSetting("ai_usage_limit")
 		autoCleanup, _ := h.DB.GetSetting("auto_cleanup_enabled")
@@ -47,10 +48,6 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 		summaryEnabled, _ := h.DB.GetSetting("summary_enabled")
 		summaryLength, _ := h.DB.GetSetting("summary_length")
 		summaryProvider, _ := h.DB.GetSetting("summary_provider")
-		summaryAIAPIKey, _ := h.DB.GetEncryptedSetting("summary_ai_api_key")
-		summaryAIEndpoint, _ := h.DB.GetSetting("summary_ai_endpoint")
-		summaryAIModel, _ := h.DB.GetSetting("summary_ai_model")
-		summaryAISystemPrompt, _ := h.DB.GetSetting("summary_ai_system_prompt")
 		proxyEnabled, _ := h.DB.GetSetting("proxy_enabled")
 		proxyType, _ := h.DB.GetSetting("proxy_type")
 		proxyHost, _ := h.DB.GetSetting("proxy_host")
@@ -78,7 +75,8 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 			"ai_api_key":                  aiAPIKey,
 			"ai_endpoint":                 aiEndpoint,
 			"ai_model":                    aiModel,
-			"ai_system_prompt":            aiSystemPrompt,
+			"ai_translation_prompt":       aiTranslationPrompt,
+			"ai_summary_prompt":           aiSummaryPrompt,
 			"ai_usage_tokens":             aiUsageTokens,
 			"ai_usage_limit":              aiUsageLimit,
 			"auto_cleanup_enabled":        autoCleanup,
@@ -100,10 +98,6 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 			"summary_enabled":             summaryEnabled,
 			"summary_length":              summaryLength,
 			"summary_provider":            summaryProvider,
-			"summary_ai_api_key":          summaryAIAPIKey,
-			"summary_ai_endpoint":         summaryAIEndpoint,
-			"summary_ai_model":            summaryAIModel,
-			"summary_ai_system_prompt":    summaryAISystemPrompt,
 			"proxy_enabled":               proxyEnabled,
 			"proxy_type":                  proxyType,
 			"proxy_host":                  proxyHost,
@@ -133,7 +127,8 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 			AIAPIKey                 string `json:"ai_api_key"`
 			AIEndpoint               string `json:"ai_endpoint"`
 			AIModel                  string `json:"ai_model"`
-			AISystemPrompt           string `json:"ai_system_prompt"`
+			AITranslationPrompt      string `json:"ai_translation_prompt"`
+			AISummaryPrompt          string `json:"ai_summary_prompt"`
 			AIUsageTokens            string `json:"ai_usage_tokens"`
 			AIUsageLimit             string `json:"ai_usage_limit"`
 			AutoCleanupEnabled       string `json:"auto_cleanup_enabled"`
@@ -154,10 +149,6 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 			SummaryEnabled           string `json:"summary_enabled"`
 			SummaryLength            string `json:"summary_length"`
 			SummaryProvider          string `json:"summary_provider"`
-			SummaryAIAPIKey          string `json:"summary_ai_api_key"`
-			SummaryAIEndpoint        string `json:"summary_ai_endpoint"`
-			SummaryAIModel           string `json:"summary_ai_model"`
-			SummaryAISystemPrompt    string `json:"summary_ai_system_prompt"`
 			ProxyEnabled             string `json:"proxy_enabled"`
 			ProxyType                string `json:"proxy_type"`
 			ProxyHost                string `json:"proxy_host"`
@@ -213,7 +204,8 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 		}
 		h.DB.SetSetting("ai_endpoint", req.AIEndpoint)
 		h.DB.SetSetting("ai_model", req.AIModel)
-		h.DB.SetSetting("ai_system_prompt", req.AISystemPrompt)
+		h.DB.SetSetting("ai_translation_prompt", req.AITranslationPrompt)
+		h.DB.SetSetting("ai_summary_prompt", req.AISummaryPrompt)
 
 		// Always update AI usage settings
 		h.DB.SetSetting("ai_usage_tokens", req.AIUsageTokens)
@@ -285,15 +277,7 @@ func HandleSettings(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 			h.DB.SetSetting("summary_provider", req.SummaryProvider)
 		}
 
-		// Always update AI summary keys as they might be cleared (use encrypted storage for API key)
-		if err := h.DB.SetEncryptedSetting("summary_ai_api_key", req.SummaryAIAPIKey); err != nil {
-			log.Printf("Failed to save summary AI API key: %v", err)
-			http.Error(w, "Failed to save summary AI API key", http.StatusInternalServerError)
-			return
-		}
-		h.DB.SetSetting("summary_ai_endpoint", req.SummaryAIEndpoint)
-		h.DB.SetSetting("summary_ai_model", req.SummaryAIModel)
-		h.DB.SetSetting("summary_ai_system_prompt", req.SummaryAISystemPrompt)
+		// AI summary prompt is now handled by common AI settings (ai_summary_prompt)
 
 		if req.ProxyEnabled != "" {
 			h.DB.SetSetting("proxy_enabled", req.ProxyEnabled)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { PhTextAlignLeft, PhTextT, PhPackage, PhKey, PhLink, PhRobot } from '@phosphor-icons/vue';
+import { PhTextAlignLeft, PhTextT, PhPackage, PhRobot } from '@phosphor-icons/vue';
 import type { SettingsData } from '@/types/settings';
 
 const { t } = useI18n();
@@ -80,113 +80,35 @@ const emit = defineEmits<{
         </select>
       </div>
 
-      <!-- AI Summary Settings -->
-      <template v-if="props.settings.summary_provider === 'ai'">
-        <div class="sub-setting-item">
-          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-            <PhKey :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium mb-0 sm:mb-1 text-sm">
-                {{ t('summaryAiApiKey') }} <span class="text-red-500">*</span>
-              </div>
-              <div class="text-xs text-text-secondary hidden sm:block">
-                {{ t('summaryAiApiKeyDesc') }}
-              </div>
+      <!-- AI Summary Prompt -->
+      <div
+        v-if="props.settings.summary_provider === 'ai'"
+        class="sub-setting-item flex-col items-stretch gap-2"
+      >
+        <div class="flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
+          <PhRobot :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
+          <div class="flex-1 min-w-0">
+            <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('aiSummaryPrompt') }}</div>
+            <div class="text-xs text-text-secondary hidden sm:block">
+              {{ t('aiSummaryPromptDesc') }}
             </div>
           </div>
-          <input
-            :value="props.settings.summary_ai_api_key"
-            type="password"
-            :placeholder="t('summaryAiApiKeyPlaceholder')"
-            :class="[
-              'input-field w-32 sm:w-48 text-xs sm:text-sm',
-              props.settings.summary_enabled &&
-              props.settings.summary_provider === 'ai' &&
-              !props.settings.summary_ai_api_key?.trim()
-                ? 'border-red-500'
-                : '',
-            ]"
-            @input="
-              (e) =>
-                emit('update:settings', {
-                  ...props.settings,
-                  summary_ai_api_key: (e.target as HTMLInputElement).value,
-                })
-            "
-          />
         </div>
-        <div class="sub-setting-item">
-          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-            <PhLink :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('summaryAiEndpoint') }}</div>
-              <div class="text-xs text-text-secondary hidden sm:block">
-                {{ t('summaryAiEndpointDesc') }}
-              </div>
-            </div>
-          </div>
-          <input
-            :value="props.settings.summary_ai_endpoint"
-            type="text"
-            :placeholder="t('summaryAiEndpointPlaceholder')"
-            class="input-field w-32 sm:w-48 text-xs sm:text-sm"
-            @input="
-              (e) =>
-                emit('update:settings', {
-                  ...props.settings,
-                  summary_ai_endpoint: (e.target as HTMLInputElement).value,
-                })
-            "
-          />
-        </div>
-        <div class="sub-setting-item">
-          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-            <PhRobot :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('summaryAiModel') }}</div>
-              <div class="text-xs text-text-secondary hidden sm:block">
-                {{ t('summaryAiModelDesc') }}
-              </div>
-            </div>
-          </div>
-          <input
-            :value="props.settings.summary_ai_model"
-            type="text"
-            :placeholder="t('summaryAiModelPlaceholder')"
-            class="input-field w-32 sm:w-48 text-xs sm:text-sm"
-            @input="
-              (e) =>
-                emit('update:settings', {
-                  ...props.settings,
-                  summary_ai_model: (e.target as HTMLInputElement).value,
-                })
-            "
-          />
-        </div>
-        <div class="sub-setting-item flex-col items-stretch gap-2">
-          <div class="flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-            <PhRobot :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('summaryAiSystemPrompt') }}</div>
-              <div class="text-xs text-text-secondary hidden sm:block">
-                {{ t('summaryAiSystemPromptDesc') }}
-              </div>
-            </div>
-          </div>
-          <textarea
-            :value="props.settings.summary_ai_system_prompt"
-            class="input-field w-full text-xs sm:text-sm resize-none"
-            rows="3"
-            @input="
-              (e) =>
-                emit('update:settings', {
-                  ...props.settings,
-                  summary_ai_system_prompt: (e.target as HTMLTextAreaElement).value,
-                })
-            "
-          />
-        </div>
-      </template>
+        <textarea
+          :value="props.settings.ai_summary_prompt"
+          class="input-field w-full text-xs sm:text-sm resize-none"
+          rows="3"
+          :placeholder="t('aiSummaryPromptPlaceholder')"
+          @input="
+            (e) =>
+              emit('update:settings', {
+                ...props.settings,
+                ai_summary_prompt: (e.target as HTMLTextAreaElement).value,
+              })
+          "
+        />
+        <div class="text-xs text-text-secondary">{{ t('aiSettingsConfiguredInAITab') }}</div>
+      </div>
 
       <div class="sub-setting-item">
         <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">

@@ -90,7 +90,7 @@ func (t *DynamicTranslator) getTranslatorWithProvider() (Translator, string, err
 		apiKey, _ = t.settings.GetEncryptedSetting("ai_api_key")
 		endpoint, _ = t.settings.GetSetting("ai_endpoint")
 		model, _ = t.settings.GetSetting("ai_model")
-		systemPrompt, _ = t.settings.GetSetting("ai_system_prompt")
+		systemPrompt, _ = t.settings.GetSetting("ai_translation_prompt")
 	}
 
 	// Check if we can reuse the cached translator

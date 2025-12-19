@@ -33,16 +33,13 @@ type Defaults struct {
 	AIAPIKey                 string `json:"ai_api_key"`
 	AIEndpoint               string `json:"ai_endpoint"`
 	AIModel                  string `json:"ai_model"`
-	AISystemPrompt           string `json:"ai_system_prompt"`
+	AITranslationPrompt      string `json:"ai_translation_prompt"`
+	AISummaryPrompt          string `json:"ai_summary_prompt"`
 	AIUsageTokens            string `json:"ai_usage_tokens"`
 	AIUsageLimit             string `json:"ai_usage_limit"`
 	SummaryEnabled           bool   `json:"summary_enabled"`
 	SummaryLength            string `json:"summary_length"`
 	SummaryProvider          string `json:"summary_provider"`
-	SummaryAIAPIKey          string `json:"summary_ai_api_key"`
-	SummaryAIEndpoint        string `json:"summary_ai_endpoint"`
-	SummaryAIModel           string `json:"summary_ai_model"`
-	SummaryAISystemPrompt    string `json:"summary_ai_system_prompt"`
 	AutoCleanupEnabled       bool   `json:"auto_cleanup_enabled"`
 	MaxCacheSizeMB           int    `json:"max_cache_size_mb"`
 	MaxArticleAgeDays        int    `json:"max_article_age_days"`
@@ -122,8 +119,10 @@ func GetString(key string) string {
 		return defaults.AIEndpoint
 	case "ai_model":
 		return defaults.AIModel
-	case "ai_system_prompt":
-		return defaults.AISystemPrompt
+	case "ai_translation_prompt":
+		return defaults.AITranslationPrompt
+	case "ai_summary_prompt":
+		return defaults.AISummaryPrompt
 	case "ai_usage_tokens":
 		return defaults.AIUsageTokens
 	case "ai_usage_limit":
@@ -134,14 +133,6 @@ func GetString(key string) string {
 		return defaults.SummaryLength
 	case "summary_provider":
 		return defaults.SummaryProvider
-	case "summary_ai_api_key":
-		return defaults.SummaryAIAPIKey
-	case "summary_ai_endpoint":
-		return defaults.SummaryAIEndpoint
-	case "summary_ai_model":
-		return defaults.SummaryAIModel
-	case "summary_ai_system_prompt":
-		return defaults.SummaryAISystemPrompt
 	case "auto_cleanup_enabled":
 		return strconv.FormatBool(defaults.AutoCleanupEnabled)
 	case "max_cache_size_mb":

@@ -70,10 +70,9 @@ func (db *DB) Init() error {
 		settingsKeys := []string{
 			"update_interval", "refresh_mode", "translation_enabled", "target_language", "translation_provider",
 			"deepl_api_key", "deepl_endpoint", "baidu_app_id", "baidu_secret_key", "ai_api_key", "ai_endpoint", "ai_model",
-			"ai_system_prompt", "ai_usage_tokens", "ai_usage_limit", "auto_cleanup_enabled", "max_cache_size_mb", "max_article_age_days", "language", "theme",
+			"ai_translation_prompt", "ai_summary_prompt", "ai_usage_tokens", "ai_usage_limit", "auto_cleanup_enabled", "max_cache_size_mb", "max_article_age_days", "language", "theme",
 			"last_article_update", "show_hidden_articles", "hover_mark_as_read", "default_view_mode", "summary_enabled", "summary_length",
-			"summary_provider", "summary_ai_api_key", "summary_ai_endpoint", "summary_ai_model", "summary_ai_system_prompt",
-			"media_cache_enabled", "media_cache_max_size_mb", "media_cache_max_age_days",
+			"summary_provider", "media_cache_enabled", "media_cache_max_size_mb", "media_cache_max_age_days",
 			"proxy_enabled", "proxy_type", "proxy_host", "proxy_port", "proxy_username", "proxy_password",
 			"shortcuts", "rules", "startup_on_boot", "close_to_tray", "google_translate_endpoint", "show_article_preview_images",
 			"window_x", "window_y", "window_width", "window_height", "window_maximized",
@@ -226,7 +225,7 @@ type TranslationCache struct {
 func (db *DB) GetCachedTranslation(sourceTextHash, targetLang, provider string) (string, bool, error) {
 	var translatedText string
 	err := db.QueryRow(
-		`SELECT translated_text FROM translation_cache 
+		`SELECT translated_text FROM translation_cache
 		 WHERE source_text_hash = ? AND target_lang = ? AND provider = ?`,
 		sourceTextHash, targetLang, provider,
 	).Scan(&translatedText)
@@ -243,8 +242,8 @@ func (db *DB) GetCachedTranslation(sourceTextHash, targetLang, provider string) 
 // SetCachedTranslation stores a translation in cache
 func (db *DB) SetCachedTranslation(sourceTextHash, sourceText, targetLang, translatedText, provider string) error {
 	_, err := db.Exec(
-		`INSERT OR REPLACE INTO translation_cache 
-		 (source_text_hash, source_text, target_lang, translated_text, provider, created_at) 
+		`INSERT OR REPLACE INTO translation_cache
+		 (source_text_hash, source_text, target_lang, translated_text, provider, created_at)
 		 VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
 		sourceTextHash, sourceText, targetLang, translatedText, provider,
 	)

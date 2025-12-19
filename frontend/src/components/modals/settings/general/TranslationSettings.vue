@@ -1,16 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import {
-  PhGlobe,
-  PhArticle,
-  PhPackage,
-  PhKey,
-  PhLink,
-  PhRobot,
-  PhChartLine,
-  PhArrowCounterClockwise,
-} from '@phosphor-icons/vue';
+import { PhGlobe, PhArticle, PhPackage, PhKey, PhLink, PhRobot } from '@phosphor-icons/vue';
 import type { SettingsData } from '@/types/settings';
 
 const { t } = useI18n();
@@ -24,69 +14,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   'update:settings': [settings: SettingsData];
 }>();
-
-// AI usage tracking
-const aiUsage = ref<{
-  usage: number;
-  limit: number;
-  limit_reached: boolean;
-}>({
-  usage: 0,
-  limit: 0,
-  limit_reached: false,
-});
-
-async function fetchAIUsage() {
-  try {
-    const response = await fetch('/api/ai-usage');
-    if (response.ok) {
-      aiUsage.value = await response.json();
-    }
-  } catch (e) {
-    console.error('Failed to fetch AI usage:', e);
-  }
-}
-
-async function resetAIUsage() {
-  if (!window.confirm(t('aiUsageResetConfirm'))) {
-    return;
-  }
-  try {
-    const response = await fetch('/api/ai-usage/reset', { method: 'POST' });
-    if (response.ok) {
-      await fetchAIUsage();
-      // Reset the local settings value as well
-      emit('update:settings', {
-        ...props.settings,
-        ai_usage_tokens: '0',
-      });
-      window.showToast(t('aiUsageResetSuccess'), 'success');
-    }
-  } catch (e) {
-    console.error('Failed to reset AI usage:', e);
-    window.showToast(t('aiUsageResetError'), 'error');
-  }
-}
-
-// Calculate usage percentage
-function getUsagePercentage(): number {
-  if (aiUsage.value.limit === 0) return 0;
-  return Math.min(100, (aiUsage.value.usage / aiUsage.value.limit) * 100);
-}
-
-onMounted(() => {
-  fetchAIUsage();
-});
-
-// Refresh AI usage when provider changes to AI
-watch(
-  () => props.settings.translation_provider,
-  (newProvider) => {
-    if (newProvider === 'ai') {
-      fetchAIUsage();
-    }
-  }
-);
 </script>
 
 <template>
@@ -317,192 +244,35 @@ watch(
         </div>
       </template>
 
-      <!-- AI Translation Settings -->
-      <template v-if="props.settings.translation_provider === 'ai'">
-        <div class="sub-setting-item">
-          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-            <PhKey :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium mb-0 sm:mb-1 text-sm">
-                {{ t('aiApiKey') }} <span class="text-red-500">*</span>
-              </div>
-              <div class="text-xs text-text-secondary hidden sm:block">
-                {{ t('aiApiKeyDesc') }}
-              </div>
-            </div>
-          </div>
-          <input
-            :value="props.settings.ai_api_key"
-            type="password"
-            :placeholder="t('aiApiKeyPlaceholder')"
-            :class="[
-              'input-field w-32 sm:w-48 text-xs sm:text-sm',
-              props.settings.translation_enabled &&
-              props.settings.translation_provider === 'ai' &&
-              !props.settings.ai_api_key?.trim()
-                ? 'border-red-500'
-                : '',
-            ]"
-            @input="
-              (e) =>
-                emit('update:settings', {
-                  ...props.settings,
-                  ai_api_key: (e.target as HTMLInputElement).value,
-                })
-            "
-          />
-        </div>
-        <div class="sub-setting-item">
-          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-            <PhLink :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('aiEndpoint') }}</div>
-              <div class="text-xs text-text-secondary hidden sm:block">
-                {{ t('aiEndpointDesc') }}
-              </div>
-            </div>
-          </div>
-          <input
-            :value="props.settings.ai_endpoint"
-            type="text"
-            :placeholder="t('aiEndpointPlaceholder')"
-            class="input-field w-32 sm:w-48 text-xs sm:text-sm"
-            @input="
-              (e) =>
-                emit('update:settings', {
-                  ...props.settings,
-                  ai_endpoint: (e.target as HTMLInputElement).value,
-                })
-            "
-          />
-        </div>
-        <div class="sub-setting-item">
-          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-            <PhRobot :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('aiModel') }}</div>
-              <div class="text-xs text-text-secondary hidden sm:block">
-                {{ t('aiModelDesc') }}
-              </div>
-            </div>
-          </div>
-          <input
-            :value="props.settings.ai_model"
-            type="text"
-            :placeholder="t('aiModelPlaceholder')"
-            class="input-field w-32 sm:w-48 text-xs sm:text-sm"
-            @input="
-              (e) =>
-                emit('update:settings', {
-                  ...props.settings,
-                  ai_model: (e.target as HTMLInputElement).value,
-                })
-            "
-          />
-        </div>
-        <div class="sub-setting-item flex-col items-stretch gap-2">
-          <div class="flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-            <PhRobot :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('aiSystemPrompt') }}</div>
-              <div class="text-xs text-text-secondary hidden sm:block">
-                {{ t('aiSystemPromptDesc') }}
-              </div>
-            </div>
-          </div>
-          <textarea
-            :value="props.settings.ai_system_prompt"
-            class="input-field w-full text-xs sm:text-sm resize-none"
-            rows="3"
-            @input="
-              (e) =>
-                emit('update:settings', {
-                  ...props.settings,
-                  ai_system_prompt: (e.target as HTMLTextAreaElement).value,
-                })
-            "
-          />
-        </div>
-
-        <!-- AI Usage Display -->
-        <div class="sub-setting-item flex-col items-stretch gap-2">
-          <div class="flex items-center justify-between gap-2 sm:gap-3 min-w-0">
-            <div class="flex items-center gap-2 sm:gap-3">
-              <PhChartLine :size="20" class="text-text-secondary shrink-0 sm:w-6 sm:h-6" />
-              <div class="flex-1 min-w-0">
-                <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('aiUsage') }}</div>
-                <div class="text-xs text-text-secondary hidden sm:block">
-                  {{ t('aiUsageTokensDesc') }}
-                </div>
-              </div>
-            </div>
-            <button
-              type="button"
-              class="flex items-center gap-1 px-2 py-1 text-xs rounded bg-bg-tertiary hover:bg-bg-secondary border border-border transition-colors"
-              @click="resetAIUsage"
-            >
-              <PhArrowCounterClockwise :size="14" />
-              {{ t('aiUsageReset') }}
-            </button>
-          </div>
-          <div class="flex flex-col gap-2 mt-2">
-            <!-- Usage bar -->
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-text-secondary w-20">{{ t('aiUsageTokens') }}:</span>
-              <span class="text-sm font-medium">
-                {{ aiUsage.usage.toLocaleString() }}
-                <span v-if="aiUsage.limit > 0" class="text-text-secondary">
-                  / {{ aiUsage.limit.toLocaleString() }}
-                </span>
-                <span v-else class="text-text-secondary text-xs">({{ t('unlimited') }})</span>
-              </span>
-            </div>
-            <!-- Progress bar (only shown if limit is set) -->
-            <div
-              v-if="aiUsage.limit > 0"
-              class="relative h-2 bg-bg-tertiary rounded-full overflow-hidden"
-            >
-              <div
-                class="absolute top-0 left-0 h-full transition-all duration-300 rounded-full"
-                :class="aiUsage.limit_reached ? 'bg-red-500' : 'bg-accent'"
-                :style="{ width: getUsagePercentage() + '%' }"
-              />
-            </div>
-            <!-- Limit reached warning -->
-            <div v-if="aiUsage.limit_reached" class="text-xs text-red-500 flex items-center gap-1">
-              <span>⚠️</span>
-              {{ t('aiUsageLimitReached') }}
+      <!-- AI Translation Prompt -->
+      <div
+        v-if="props.settings.translation_provider === 'ai'"
+        class="sub-setting-item flex-col items-stretch gap-2"
+      >
+        <div class="flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
+          <PhRobot :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
+          <div class="flex-1 min-w-0">
+            <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('aiTranslationPrompt') }}</div>
+            <div class="text-xs text-text-secondary hidden sm:block">
+              {{ t('aiTranslationPromptDesc') }}
             </div>
           </div>
         </div>
-
-        <!-- AI Usage Limit Setting -->
-        <div class="sub-setting-item">
-          <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-            <PhChartLine :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium mb-0 sm:mb-1 text-sm">{{ t('aiUsageLimit') }}</div>
-              <div class="text-xs text-text-secondary hidden sm:block">
-                {{ t('aiUsageLimitDesc') }}
-              </div>
-            </div>
-          </div>
-          <input
-            :value="props.settings.ai_usage_limit"
-            type="number"
-            min="0"
-            :placeholder="t('aiUsageLimitPlaceholder')"
-            class="input-field w-32 sm:w-48 text-xs sm:text-sm"
-            @input="
-              (e) =>
-                emit('update:settings', {
-                  ...props.settings,
-                  ai_usage_limit: (e.target as HTMLInputElement).value,
-                })
-            "
-          />
-        </div>
-      </template>
+        <textarea
+          :value="props.settings.ai_translation_prompt"
+          class="input-field w-full text-xs sm:text-sm resize-none"
+          rows="3"
+          :placeholder="t('aiTranslationPromptPlaceholder')"
+          @input="
+            (e) =>
+              emit('update:settings', {
+                ...props.settings,
+                ai_translation_prompt: (e.target as HTMLTextAreaElement).value,
+              })
+          "
+        />
+        <div class="text-xs text-text-secondary">{{ t('aiSettingsConfiguredInAITab') }}</div>
+      </div>
 
       <div class="sub-setting-item">
         <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">

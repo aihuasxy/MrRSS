@@ -79,7 +79,7 @@ func HandleSummarizeArticle(h *core.Handler, w http.ResponseWriter, r *http.Requ
 			usedFallback = true
 		} else {
 			// Use AI summarization (use encrypted method for API key)
-			apiKey, err := h.DB.GetEncryptedSetting("summary_ai_api_key")
+			apiKey, err := h.DB.GetEncryptedSetting("ai_api_key")
 			if err != nil || apiKey == "" {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusBadRequest)
@@ -92,10 +92,10 @@ func HandleSummarizeArticle(h *core.Handler, w http.ResponseWriter, r *http.Requ
 			// Apply rate limiting for AI requests
 			h.AITracker.WaitForRateLimit()
 
-			// Get endpoint and model with fallback to defaults
-			endpoint, _ := h.DB.GetSetting("summary_ai_endpoint")
-			model, _ := h.DB.GetSetting("summary_ai_model")
-			systemPrompt, _ := h.DB.GetSetting("summary_ai_system_prompt")
+			// Get global AI settings
+			endpoint, _ := h.DB.GetSetting("ai_endpoint")
+			model, _ := h.DB.GetSetting("ai_model")
+			systemPrompt, _ := h.DB.GetSetting("ai_summary_prompt")
 
 			aiSummarizer := summary.NewAISummarizer(apiKey, endpoint, model)
 			if systemPrompt != "" {

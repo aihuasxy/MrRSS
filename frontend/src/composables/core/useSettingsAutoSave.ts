@@ -107,7 +107,10 @@ export function useSettingsAutoSave(settings: Ref<SettingsData> | (() => Setting
           ai_api_key: settingsRef.value.ai_api_key ?? settingsDefaults.ai_api_key,
           ai_endpoint: settingsRef.value.ai_endpoint ?? settingsDefaults.ai_endpoint,
           ai_model: settingsRef.value.ai_model ?? settingsDefaults.ai_model,
-          ai_system_prompt: settingsRef.value.ai_system_prompt ?? settingsDefaults.ai_system_prompt,
+          ai_translation_prompt:
+            settingsRef.value.ai_translation_prompt ?? settingsDefaults.ai_translation_prompt,
+          ai_summary_prompt:
+            settingsRef.value.ai_summary_prompt ?? settingsDefaults.ai_summary_prompt,
           ai_usage_tokens: settingsRef.value.ai_usage_tokens ?? settingsDefaults.ai_usage_tokens,
           ai_usage_limit: settingsRef.value.ai_usage_limit ?? settingsDefaults.ai_usage_limit,
           auto_cleanup_enabled: (
@@ -150,13 +153,6 @@ export function useSettingsAutoSave(settings: Ref<SettingsData> | (() => Setting
           ).toString(),
           summary_length: settingsRef.value.summary_length ?? settingsDefaults.summary_length,
           summary_provider: settingsRef.value.summary_provider ?? settingsDefaults.summary_provider,
-          summary_ai_api_key:
-            settingsRef.value.summary_ai_api_key ?? settingsDefaults.summary_ai_api_key,
-          summary_ai_endpoint:
-            settingsRef.value.summary_ai_endpoint ?? settingsDefaults.summary_ai_endpoint,
-          summary_ai_model: settingsRef.value.summary_ai_model ?? settingsDefaults.summary_ai_model,
-          summary_ai_system_prompt:
-            settingsRef.value.summary_ai_system_prompt ?? settingsDefaults.summary_ai_system_prompt,
           proxy_enabled: (
             settingsRef.value.proxy_enabled ?? settingsDefaults.proxy_enabled
           ).toString(),

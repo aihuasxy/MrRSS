@@ -24,15 +24,15 @@ type AISummarizer struct {
 // NewAISummarizer creates a new AI summarizer with the given credentials.
 // endpoint should be the API base URL (e.g., "https://api.openai.com/v1" for OpenAI)
 // model should be the model name (e.g., "gpt-4o-mini", "claude-3-haiku-20240307")
-// Summary settings are independent from translation settings.
+// Uses global AI settings shared between translation and summarization.
 func NewAISummarizer(apiKey, endpoint, model string) *AISummarizer {
 	defaults := config.Get()
-	// Use only summary-specific endpoint and model; no fallback to translation settings
+	// Use global AI endpoint and model
 	if endpoint == "" {
-		endpoint = defaults.SummaryAIEndpoint
+		endpoint = defaults.AIEndpoint
 	}
 	if model == "" {
-		model = defaults.SummaryAIModel
+		model = defaults.AIModel
 	}
 	return &AISummarizer{
 		APIKey:       apiKey,

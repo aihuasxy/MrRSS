@@ -15,7 +15,8 @@ export interface SettingsData {
   ai_api_key: string;
   ai_endpoint: string;
   ai_model: string;
-  ai_system_prompt: string;
+  ai_translation_prompt: string;
+  ai_summary_prompt: string;
   ai_usage_tokens: string;
   ai_usage_limit: string;
   auto_cleanup_enabled: boolean;
@@ -37,10 +38,6 @@ export interface SettingsData {
   summary_enabled: boolean;
   summary_length: string;
   summary_provider: string;
-  summary_ai_api_key: string;
-  summary_ai_endpoint: string;
-  summary_ai_model: string;
-  summary_ai_system_prompt: string;
   proxy_enabled: boolean;
   proxy_type: string;
   proxy_host: string;
@@ -87,4 +84,4 @@ export interface InstallResponse {
   success: boolean;
 }
 
-export type TabName = 'general' | 'feeds' | 'rules' | 'network' | 'shortcuts' | 'about';
+export type TabName = 'general' | 'feeds' | 'ai' | 'rules' | 'network' | 'shortcuts' | 'about';
