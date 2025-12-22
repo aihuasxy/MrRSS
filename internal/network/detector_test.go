@@ -1,9 +1,14 @@
 package network
 
-import "testing"
+import (
+	"net/http"
+	"testing"
+	"time"
+)
 
 func TestCalculateSpeedLevel(t *testing.T) {
-	d := NewDetector()
+	client := &http.Client{Timeout: 10 * time.Second}
+	d := NewDetector(client)
 
 	tests := []struct {
 		lat             int64

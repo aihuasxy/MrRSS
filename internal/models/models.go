@@ -10,6 +10,7 @@ type Feed struct {
 	Description        string    `json:"description"`
 	Category           string    `json:"category"`
 	ImageURL           string    `json:"image_url"` // New field
+	Position           int       `json:"position"`  // Position within category for custom ordering
 	LastUpdated        time.Time `json:"last_updated"`
 	LastError          string    `json:"last_error,omitempty"`  // Track last fetch error
 	DiscoveryCompleted bool      `json:"discovery_completed"`   // Track if discovery has been run
@@ -19,6 +20,18 @@ type Feed struct {
 	ProxyEnabled       bool      `json:"proxy_enabled"`         // Whether to use proxy for this feed
 	RefreshInterval    int       `json:"refresh_interval"`      // Custom refresh interval in minutes (0 = use global, -1 = intelligent, >0 = custom minutes)
 	IsImageMode        bool      `json:"is_image_mode"`         // Whether this feed is for image gallery mode
+	// XPath support for HTML/XML scraping
+	Type                string `json:"type"`                   // "HTML+XPath" or "XML+XPath"
+	XPathItem           string `json:"xpath_item"`             // XPath to extract feed items
+	XPathItemTitle      string `json:"xpath_item_title"`       // XPath to extract item title
+	XPathItemContent    string `json:"xpath_item_content"`     // XPath to extract item content
+	XPathItemUri        string `json:"xpath_item_uri"`         // XPath to extract item URI
+	XPathItemAuthor     string `json:"xpath_item_author"`      // XPath to extract item author
+	XPathItemTimestamp  string `json:"xpath_item_timestamp"`   // XPath to extract item timestamp
+	XPathItemTimeFormat string `json:"xpath_item_time_format"` // Time format for parsing timestamp
+	XPathItemThumbnail  string `json:"xpath_item_thumbnail"`   // XPath to extract item thumbnail
+	XPathItemCategories string `json:"xpath_item_categories"`  // XPath to extract item categories
+	XPathItemUid        string `json:"xpath_item_uid"`         // XPath to extract item unique ID
 }
 
 type Article struct {

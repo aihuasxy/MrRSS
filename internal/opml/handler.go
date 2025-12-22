@@ -39,6 +39,17 @@ type Outline struct {
 	// Additional attributes for compatibility with various OPML formats
 	Description string `xml:"description,attr"`
 	Category    string `xml:"category,attr"`
+	// FreshRSS XPath extension attributes
+	XPathItem           string `xml:"xPathItem,attr"`
+	XPathItemTitle      string `xml:"xPathItemTitle,attr"`
+	XPathItemContent    string `xml:"xPathItemContent,attr"`
+	XPathItemUri        string `xml:"xPathItemUri,attr"`
+	XPathItemAuthor     string `xml:"xPathItemAuthor,attr"`
+	XPathItemTimestamp  string `xml:"xPathItemTimestamp,attr"`
+	XPathItemTimeFormat string `xml:"xPathItemTimeFormat,attr"`
+	XPathItemThumbnail  string `xml:"xPathItemThumbnail,attr"`
+	XPathItemCategories string `xml:"xPathItemCategories,attr"`
+	XPathItemUid        string `xml:"xPathItemUid,attr"`
 }
 
 // normalizeOPMLAttributes normalizes attribute names in OPML content to handle
@@ -129,6 +140,18 @@ func Parse(r io.Reader) ([]models.Feed, error) {
 					Title:    title,
 					URL:      xmlURL,
 					Category: feedCategory,
+					// XPath support
+					Type:                o.Type,
+					XPathItem:           o.XPathItem,
+					XPathItemTitle:      o.XPathItemTitle,
+					XPathItemContent:    o.XPathItemContent,
+					XPathItemUri:        o.XPathItemUri,
+					XPathItemAuthor:     o.XPathItemAuthor,
+					XPathItemTimestamp:  o.XPathItemTimestamp,
+					XPathItemTimeFormat: o.XPathItemTimeFormat,
+					XPathItemThumbnail:  o.XPathItemThumbnail,
+					XPathItemCategories: o.XPathItemCategories,
+					XPathItemUid:        o.XPathItemUid,
 				})
 			}
 
@@ -240,8 +263,19 @@ func Generate(feeds []models.Feed) ([]byte, error) {
 		*currentOutlines = append(*currentOutlines, &Outline{
 			Text:   f.Title,
 			Title:  f.Title,
-			Type:   "rss",
+			Type:   f.Type,
 			XMLURL: f.URL,
+			// XPath support
+			XPathItem:           f.XPathItem,
+			XPathItemTitle:      f.XPathItemTitle,
+			XPathItemContent:    f.XPathItemContent,
+			XPathItemUri:        f.XPathItemUri,
+			XPathItemAuthor:     f.XPathItemAuthor,
+			XPathItemTimestamp:  f.XPathItemTimestamp,
+			XPathItemTimeFormat: f.XPathItemTimeFormat,
+			XPathItemThumbnail:  f.XPathItemThumbnail,
+			XPathItemCategories: f.XPathItemCategories,
+			XPathItemUid:        f.XPathItemUid,
 		})
 	}
 

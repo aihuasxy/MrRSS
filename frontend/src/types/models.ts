@@ -25,6 +25,7 @@ export interface Feed {
   title: string;
   category: string;
   last_fetched_at: string;
+  position?: number; // Position within category for custom ordering
   is_discovered?: boolean;
   website_url?: string;
   image_url?: string;
@@ -35,6 +36,18 @@ export interface Feed {
   proxy_enabled?: boolean;
   refresh_interval?: number;
   is_image_mode?: boolean;
+  // XPath support
+  type?: string;
+  xpath_item?: string;
+  xpath_item_title?: string;
+  xpath_item_content?: string;
+  xpath_item_uri?: string;
+  xpath_item_author?: string;
+  xpath_item_timestamp?: string;
+  xpath_item_time_format?: string;
+  xpath_item_thumbnail?: string;
+  xpath_item_categories?: string;
+  xpath_item_uid?: string;
 }
 
 export interface UnreadCounts {
@@ -46,6 +59,7 @@ export interface RefreshProgress {
   current: number;
   total: number;
   isRunning: boolean;
+  errors?: Record<number, string>; // Map of feed ID to error message
 }
 
 export interface UpdateInfo {

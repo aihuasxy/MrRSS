@@ -31,12 +31,13 @@ type DetectionResult struct {
 
 // Detector handles network speed detection
 type Detector struct {
-	testURLs []string
-	timeout  time.Duration
+	testURLs   []string
+	timeout    time.Duration
+	httpClient *http.Client
 }
 
 // NewDetector creates a new network speed detector
-func NewDetector() *Detector {
+func NewDetector(httpClient *http.Client) *Detector {
 	return &Detector{
 		testURLs: []string{
 			"https://www.google.com/favicon.ico",
@@ -47,7 +48,8 @@ func NewDetector() *Detector {
 			"https://www.qq.com/favicon.ico",
 			"https://www.aliyun.com/favicon.ico",
 		},
-		timeout: 10 * time.Second,
+		timeout:    10 * time.Second,
+		httpClient: httpClient,
 	}
 }
 
@@ -91,10 +93,6 @@ func (d *Detector) DetectSpeed(ctx context.Context) DetectionResult {
 
 // testLatency measures network latency by pinging a reliable server
 func (d *Detector) testLatency(ctx context.Context) (int64, error) {
-	client := &http.Client{
-		Timeout: d.timeout,
-	}
-
 	var totalLatency int64
 	successCount := 0
 
@@ -105,7 +103,7 @@ func (d *Detector) testLatency(ctx context.Context) (int64, error) {
 			continue
 		}
 
-		resp, err := client.Do(req)
+		resp, err := d.httpClient.Do(req)
 		if err != nil {
 			continue
 		}
@@ -137,17 +135,13 @@ func (d *Detector) testBandwidth(ctx context.Context) (float64, error) {
 	// We'll use a ~100KB test download
 	testURL := "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"
 
-	client := &http.Client{
-		Timeout: d.timeout,
-	}
-
 	req, err := http.NewRequestWithContext(ctx, "GET", testURL, nil)
 	if err != nil {
 		return 0, err
 	}
 
 	start := time.Now()
-	resp, err := client.Do(req)
+	resp, err := d.httpClient.Do(req)
 	if err != nil {
 		return 0, err
 	}

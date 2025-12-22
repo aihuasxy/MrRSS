@@ -3,7 +3,10 @@
 package core
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,9 +15,13 @@ import (
 	"MrRSS/internal/database"
 	"MrRSS/internal/discovery"
 	"MrRSS/internal/feed"
+	"MrRSS/internal/models"
 	"MrRSS/internal/translation"
 	"MrRSS/internal/utils"
 
+	"codeberg.org/readeck/go-readability/v2"
+
+	"github.com/mmcdole/gofeed"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -88,19 +95,10 @@ func (h *Handler) GetArticleContent(articleID int64) (string, error) {
 		return "", err
 	}
 
-	var targetFeed *struct {
-		URL        string
-		ScriptPath string
-	}
+	var targetFeed *models.Feed
 	for _, f := range feeds {
 		if f.ID == article.FeedID {
-			targetFeed = &struct {
-				URL        string
-				ScriptPath string
-			}{
-				URL:        f.URL,
-				ScriptPath: f.ScriptPath,
-			}
+			targetFeed = &f
 			break
 		}
 	}
@@ -109,27 +107,110 @@ func (h *Handler) GetArticleContent(articleID int64) (string, error) {
 		return "", nil
 	}
 
-	// Parse the feed to get fresh content
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	// Try to get feed from cache first
+	var parsedFeed *gofeed.Feed
+	if cachedFeed, found := h.ContentCache.GetFeed(targetFeed.ID); found {
+		parsedFeed = cachedFeed
+	} else {
+		// Parse the feed to get fresh content
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 
-	parsedFeed, err := h.Fetcher.ParseFeedWithScript(ctx, targetFeed.URL, targetFeed.ScriptPath, true) // High priority for content fetching
-	if err != nil {
-		return "", err
+		parsedFeed, err = h.Fetcher.ParseFeedWithFeed(ctx, targetFeed, true) // High priority for content fetching
+		if err != nil {
+			return "", err
+		}
+
+		// Cache the feed for future use
+		h.ContentCache.SetFeed(targetFeed.ID, parsedFeed)
 	}
 
-	// Find the article in the feed by URL
-	for _, item := range parsedFeed.Items {
-		if utils.URLsMatch(item.Link, article.URL) {
-			content := feed.ExtractContent(item)
-			cleanContent := utils.CleanHTML(content)
+	// Find the article in the feed by multiple criteria for better matching
+	matchingItem := h.findMatchingFeedItem(article, parsedFeed.Items)
+	if matchingItem != nil {
+		content := feed.ExtractContent(matchingItem)
+		cleanContent := utils.CleanHTML(content)
 
-			// Cache the content
-			h.ContentCache.Set(articleID, cleanContent)
+		// Cache the content
+		h.ContentCache.Set(articleID, cleanContent)
 
-			return cleanContent, nil
-		}
+		return cleanContent, nil
 	}
 
 	return "", nil
+}
+
+// FetchFullArticleContent fetches the full article content from the original URL using readability.
+func (h *Handler) FetchFullArticleContent(url string) (string, error) {
+	// Use FromURL which handles the HTTP request internally
+	article, err := readability.FromURL(url, 30*time.Second)
+	if err != nil {
+		return "", fmt.Errorf("readability parse: %w", err)
+	}
+
+	// Render the article content as HTML
+	var buf bytes.Buffer
+	err = article.RenderHTML(&buf)
+	if err != nil {
+		return "", fmt.Errorf("render HTML: %w", err)
+	}
+
+	return buf.String(), nil
+}
+
+// findMatchingFeedItem finds the best matching feed item for an article using multiple criteria
+func (h *Handler) findMatchingFeedItem(article *models.Article, items []*gofeed.Item) *gofeed.Item {
+	// First pass: exact URL match
+	for _, item := range items {
+		if utils.URLsMatch(item.Link, article.URL) {
+			return item
+		}
+	}
+
+	// Second pass: URL + title match (for script-based feeds that might have URL variations)
+	for _, item := range items {
+		if utils.URLsMatch(item.Link, article.URL) && h.titlesMatch(item.Title, article.Title) {
+			return item
+		}
+	}
+
+	// Third pass: title + published time match (fallback for when URLs don't match)
+	for _, item := range items {
+		if h.titlesMatch(item.Title, article.Title) && h.publishedTimesMatch(item.PublishedParsed, &article.PublishedAt) {
+			return item
+		}
+	}
+
+	// Final fallback: just title match
+	for _, item := range items {
+		if h.titlesMatch(item.Title, article.Title) {
+			return item
+		}
+	}
+
+	return nil
+}
+
+// titlesMatch checks if two titles match, allowing for minor differences
+func (h *Handler) titlesMatch(title1, title2 string) bool {
+	if title1 == title2 {
+		return true
+	}
+	// Normalize titles by removing extra whitespace and comparing
+	normalized1 := strings.TrimSpace(strings.Join(strings.Fields(title1), " "))
+	normalized2 := strings.TrimSpace(strings.Join(strings.Fields(title2), " "))
+	return normalized1 == normalized2
+}
+
+// publishedTimesMatch checks if two published times match within a reasonable tolerance
+func (h *Handler) publishedTimesMatch(time1, time2 *time.Time) bool {
+	if time1 == nil || time2 == nil {
+		return false
+	}
+	// Allow for 1 minute difference in published times
+	diff := time1.Sub(*time2)
+	if diff < 0 {
+		diff = -diff
+	}
+	return diff <= time.Minute
 }

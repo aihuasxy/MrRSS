@@ -161,3 +161,9 @@ The scripts folder is located in the MrRSS data directory:
 - **Linux**: `~/.local/share/MrRSS/scripts/`
 
 You can also open the scripts folder directly from the MrRSS interface when adding a new feed.
+
+## Additional Resources
+
+- [XPath Mode Documentation](XPATH_MODE.md)
+- [RSS 2.0 Specification](https://validator.w3.org/feed/docs/rss2.html)
+- [Atom Syndication Format](https://tools.ietf.org/html/rfc4287)

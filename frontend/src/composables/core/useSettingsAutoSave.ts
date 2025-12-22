@@ -113,6 +113,9 @@ export function useSettingsAutoSave(settings: Ref<SettingsData> | (() => Setting
             settingsRef.value.ai_summary_prompt ?? settingsDefaults.ai_summary_prompt,
           ai_usage_tokens: settingsRef.value.ai_usage_tokens ?? settingsDefaults.ai_usage_tokens,
           ai_usage_limit: settingsRef.value.ai_usage_limit ?? settingsDefaults.ai_usage_limit,
+          ai_chat_enabled: (
+            settingsRef.value.ai_chat_enabled ?? settingsDefaults.ai_chat_enabled
+          ).toString(),
           auto_cleanup_enabled: (
             settingsRef.value.auto_cleanup_enabled ?? settingsDefaults.auto_cleanup_enabled
           ).toString(),
@@ -153,6 +156,8 @@ export function useSettingsAutoSave(settings: Ref<SettingsData> | (() => Setting
           ).toString(),
           summary_length: settingsRef.value.summary_length ?? settingsDefaults.summary_length,
           summary_provider: settingsRef.value.summary_provider ?? settingsDefaults.summary_provider,
+          summary_trigger_mode:
+            settingsRef.value.summary_trigger_mode ?? settingsDefaults.summary_trigger_mode,
           proxy_enabled: (
             settingsRef.value.proxy_enabled ?? settingsDefaults.proxy_enabled
           ).toString(),
@@ -168,6 +173,12 @@ export function useSettingsAutoSave(settings: Ref<SettingsData> | (() => Setting
             settingsRef.value.show_article_preview_images ??
             settingsDefaults.show_article_preview_images
           ).toString(),
+          obsidian_enabled: (
+            settingsRef.value.obsidian_enabled ?? settingsDefaults.obsidian_enabled
+          ).toString(),
+          obsidian_vault: settingsRef.value.obsidian_vault ?? settingsDefaults.obsidian_vault,
+          obsidian_vault_path:
+            settingsRef.value.obsidian_vault_path ?? settingsDefaults.obsidian_vault_path,
           network_speed: settingsRef.value.network_speed ?? settingsDefaults.network_speed,
           network_bandwidth_mbps:
             settingsRef.value.network_bandwidth_mbps ?? settingsDefaults.network_bandwidth_mbps,
@@ -179,6 +190,18 @@ export function useSettingsAutoSave(settings: Ref<SettingsData> | (() => Setting
             settingsRef.value.last_network_test ?? settingsDefaults.last_network_test,
           image_gallery_enabled: (
             settingsRef.value.image_gallery_enabled ?? settingsDefaults.image_gallery_enabled
+          ).toString(),
+          freshrss_enabled: (
+            settingsRef.value.freshrss_enabled ?? settingsDefaults.freshrss_enabled
+          ).toString(),
+          freshrss_server_url:
+            settingsRef.value.freshrss_server_url ?? settingsDefaults.freshrss_server_url,
+          freshrss_username:
+            settingsRef.value.freshrss_username ?? settingsDefaults.freshrss_username,
+          freshrss_api_password:
+            settingsRef.value.freshrss_api_password ?? settingsDefaults.freshrss_api_password,
+          full_text_fetch_enabled: (
+            settingsRef.value.full_text_fetch_enabled ?? settingsDefaults.full_text_fetch_enabled
           ).toString(),
         }),
       });

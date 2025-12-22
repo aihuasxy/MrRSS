@@ -31,6 +31,18 @@ func HandleAddFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 		ProxyEnabled     bool   `json:"proxy_enabled"`
 		RefreshInterval  int    `json:"refresh_interval"`
 		IsImageMode      bool   `json:"is_image_mode"`
+		// XPath fields
+		Type                string `json:"type"`
+		XPathItem           string `json:"xpath_item"`
+		XPathItemTitle      string `json:"xpath_item_title"`
+		XPathItemContent    string `json:"xpath_item_content"`
+		XPathItemUri        string `json:"xpath_item_uri"`
+		XPathItemAuthor     string `json:"xpath_item_author"`
+		XPathItemTimestamp  string `json:"xpath_item_timestamp"`
+		XPathItemTimeFormat string `json:"xpath_item_time_format"`
+		XPathItemThumbnail  string `json:"xpath_item_thumbnail"`
+		XPathItemCategories string `json:"xpath_item_categories"`
+		XPathItemUid        string `json:"xpath_item_uid"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -42,6 +54,9 @@ func HandleAddFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	if req.ScriptPath != "" {
 		// Add feed using custom script
 		feedID, err = h.Fetcher.AddScriptSubscription(req.ScriptPath, req.Category, req.Title)
+	} else if req.XPathItem != "" {
+		// Add feed using XPath
+		feedID, err = h.Fetcher.AddXPathSubscription(req.URL, req.Category, req.Title, req.Type, req.XPathItem, req.XPathItemTitle, req.XPathItemContent, req.XPathItemUri, req.XPathItemAuthor, req.XPathItemTimestamp, req.XPathItemTimeFormat, req.XPathItemThumbnail, req.XPathItemCategories, req.XPathItemUid)
 	} else {
 		// Add feed using URL
 		feedID, err = h.Fetcher.AddSubscription(req.URL, req.Category, req.Title)
@@ -60,7 +75,7 @@ func HandleAddFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "feed created but failed to update settings: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err := h.DB.UpdateFeed(feed.ID, feed.Title, feed.URL, feed.Category, feed.ScriptPath, req.HideFromTimeline, req.ProxyURL, req.ProxyEnabled, req.RefreshInterval, req.IsImageMode); err != nil {
+	if err := h.DB.UpdateFeed(feed.ID, feed.Title, feed.URL, feed.Category, feed.ScriptPath, req.HideFromTimeline, req.ProxyURL, req.ProxyEnabled, req.RefreshInterval, req.IsImageMode, feed.Type, feed.XPathItem, feed.XPathItemTitle, feed.XPathItemContent, feed.XPathItemUri, feed.XPathItemAuthor, feed.XPathItemTimestamp, feed.XPathItemTimeFormat, feed.XPathItemThumbnail, feed.XPathItemCategories, feed.XPathItemUid); err != nil {
 		http.Error(w, "feed created but failed to update settings: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -101,13 +116,25 @@ func HandleUpdateFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 		ProxyEnabled     bool   `json:"proxy_enabled"`
 		RefreshInterval  int    `json:"refresh_interval"`
 		IsImageMode      bool   `json:"is_image_mode"`
+		// XPath fields
+		Type                string `json:"type"`
+		XPathItem           string `json:"xpath_item"`
+		XPathItemTitle      string `json:"xpath_item_title"`
+		XPathItemContent    string `json:"xpath_item_content"`
+		XPathItemUri        string `json:"xpath_item_uri"`
+		XPathItemAuthor     string `json:"xpath_item_author"`
+		XPathItemTimestamp  string `json:"xpath_item_timestamp"`
+		XPathItemTimeFormat string `json:"xpath_item_time_format"`
+		XPathItemThumbnail  string `json:"xpath_item_thumbnail"`
+		XPathItemCategories string `json:"xpath_item_categories"`
+		XPathItemUid        string `json:"xpath_item_uid"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := h.DB.UpdateFeed(req.ID, req.Title, req.URL, req.Category, req.ScriptPath, req.HideFromTimeline, req.ProxyURL, req.ProxyEnabled, req.RefreshInterval, req.IsImageMode); err != nil {
+	if err := h.DB.UpdateFeed(req.ID, req.Title, req.URL, req.Category, req.ScriptPath, req.HideFromTimeline, req.ProxyURL, req.ProxyEnabled, req.RefreshInterval, req.IsImageMode, req.Type, req.XPathItem, req.XPathItemTitle, req.XPathItemContent, req.XPathItemUri, req.XPathItemAuthor, req.XPathItemTimestamp, req.XPathItemTimeFormat, req.XPathItemThumbnail, req.XPathItemCategories, req.XPathItemUid); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -138,4 +165,30 @@ func HandleRefreshFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) 
 	go h.Fetcher.FetchSingleFeed(context.Background(), *feed)
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// HandleReorderFeed reorders a feed within or across categories.
+func HandleReorderFeed(h *core.Handler, w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		FeedID   int64  `json:"feed_id"`
+		Category string `json:"category"`
+		Position int    `json:"position"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.DB.ReorderFeed(req.FeedID, req.Category, req.Position); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }

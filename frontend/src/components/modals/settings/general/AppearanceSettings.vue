@@ -6,7 +6,9 @@ import {
   PhTranslate,
   PhArticle,
   PhImage,
+  PhImages,
   PhCursorClick,
+  PhArticleNyTimes,
 } from '@phosphor-icons/vue';
 import type { SettingsData } from '@/types/settings';
 
@@ -129,7 +131,32 @@ const emit = defineEmits<{
     </div>
     <div class="setting-item mt-2 sm:mt-3">
       <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
-        <PhImage :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
+        <PhArticleNyTimes :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
+        <div class="flex-1 min-w-0">
+          <div class="font-medium mb-0 sm:mb-1 text-sm sm:text-base">
+            {{ t('enableFullTextFetch') }}
+          </div>
+          <div class="text-xs text-text-secondary hidden sm:block">
+            {{ t('enableFullTextFetchDesc') }}
+          </div>
+        </div>
+      </div>
+      <input
+        :checked="settings.full_text_fetch_enabled"
+        type="checkbox"
+        class="toggle"
+        @change="
+          (e) =>
+            emit('update:settings', {
+              ...settings,
+              full_text_fetch_enabled: (e.target as HTMLInputElement).checked,
+            })
+        "
+      />
+    </div>
+    <div class="setting-item mt-2 sm:mt-3">
+      <div class="flex-1 flex items-center sm:items-start gap-2 sm:gap-3 min-w-0">
+        <PhImages :size="20" class="text-text-secondary mt-0.5 shrink-0 sm:w-6 sm:h-6" />
         <div class="flex-1 min-w-0">
           <div class="font-medium mb-0 sm:mb-1 text-sm sm:text-base">
             {{ t('imageGalleryEnabled') }}

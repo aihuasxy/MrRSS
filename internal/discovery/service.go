@@ -55,6 +55,17 @@ type Service struct {
 
 // NewService creates a new discovery service
 func NewService() *Service {
+	feedParser := gofeed.NewParser()
+	feedParser.Client = &http.Client{
+		Timeout: HTTPClientTimeout,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return errTooManyRedirects
+			}
+			return nil
+		},
+	}
+
 	return &Service{
 		client: &http.Client{
 			Timeout: HTTPClientTimeout,
@@ -65,6 +76,6 @@ func NewService() *Service {
 				return nil
 			},
 		},
-		feedParser: gofeed.NewParser(),
+		feedParser: feedParser,
 	}
 }

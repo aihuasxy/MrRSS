@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 
 	"MrRSS/internal/handlers/core"
 	"MrRSS/internal/network"
+	"MrRSS/internal/utils"
 )
 
 // HandleDetectNetwork detects network speed and updates settings
@@ -19,7 +21,35 @@ func HandleDetectNetwork(h *core.Handler, w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	detector := network.NewDetector()
+	// Get proxy settings
+	proxyEnabled, _ := h.DB.GetSetting("proxy_enabled")
+	proxyType, _ := h.DB.GetSetting("proxy_type")
+	proxyHost, _ := h.DB.GetSetting("proxy_host")
+	proxyPort, _ := h.DB.GetSetting("proxy_port")
+	proxyUsername, _ := h.DB.GetSetting("proxy_username")
+	proxyPassword, _ := h.DB.GetSetting("proxy_password")
+
+	// Create HTTP client with proxy if enabled
+	var httpClient *http.Client
+	if proxyEnabled == "true" {
+		proxyURL := utils.BuildProxyURL(proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword)
+		if proxyURL != "" {
+			client, err := utils.CreateHTTPClient(proxyURL, 10*time.Second)
+			if err != nil {
+				log.Printf("Failed to create HTTP client with proxy: %v", err)
+				// Fall back to default client
+				httpClient = &http.Client{Timeout: 10 * time.Second}
+			} else {
+				httpClient = client
+			}
+		} else {
+			httpClient = &http.Client{Timeout: 10 * time.Second}
+		}
+	} else {
+		httpClient = &http.Client{Timeout: 10 * time.Second}
+	}
+
+	detector := network.NewDetector(httpClient)
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
 

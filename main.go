@@ -26,9 +26,11 @@ import (
 	"MrRSS/internal/feed"
 	article "MrRSS/internal/handlers/article"
 	browser "MrRSS/internal/handlers/browser"
+	chat "MrRSS/internal/handlers/chat"
 	handlers "MrRSS/internal/handlers/core"
 	discovery "MrRSS/internal/handlers/discovery"
 	feedhandlers "MrRSS/internal/handlers/feed"
+	freshrssHandler "MrRSS/internal/handlers/freshrss"
 	media "MrRSS/internal/handlers/media"
 	networkhandlers "MrRSS/internal/handlers/network"
 	opml "MrRSS/internal/handlers/opml"
@@ -204,6 +206,7 @@ func main() {
 	apiMux.HandleFunc("/api/feeds/discover-all/start", func(w http.ResponseWriter, r *http.Request) { discovery.HandleStartBatchDiscovery(h, w, r) })
 	apiMux.HandleFunc("/api/feeds/discover-all/progress", func(w http.ResponseWriter, r *http.Request) { discovery.HandleGetBatchDiscoveryProgress(h, w, r) })
 	apiMux.HandleFunc("/api/feeds/discover-all/clear", func(w http.ResponseWriter, r *http.Request) { discovery.HandleClearBatchDiscovery(h, w, r) })
+	apiMux.HandleFunc("/api/feeds/reorder", func(w http.ResponseWriter, r *http.Request) { feedhandlers.HandleReorderFeed(h, w, r) })
 	apiMux.HandleFunc("/api/articles", func(w http.ResponseWriter, r *http.Request) { article.HandleArticles(h, w, r) })
 	apiMux.HandleFunc("/api/articles/images", func(w http.ResponseWriter, r *http.Request) { article.HandleImageGalleryArticles(h, w, r) })
 	apiMux.HandleFunc("/api/articles/filter", func(w http.ResponseWriter, r *http.Request) { article.HandleFilteredArticles(h, w, r) })
@@ -215,18 +218,23 @@ func main() {
 	apiMux.HandleFunc("/api/articles/clear-translations", func(w http.ResponseWriter, r *http.Request) { translationhandlers.HandleClearTranslations(h, w, r) })
 	apiMux.HandleFunc("/api/ai-usage", func(w http.ResponseWriter, r *http.Request) { translationhandlers.HandleGetAIUsage(h, w, r) })
 	apiMux.HandleFunc("/api/ai-usage/reset", func(w http.ResponseWriter, r *http.Request) { translationhandlers.HandleResetAIUsage(h, w, r) })
+	apiMux.HandleFunc("/api/ai-chat", func(w http.ResponseWriter, r *http.Request) { chat.HandleAIChat(h, w, r) })
 	apiMux.HandleFunc("/api/articles/toggle-hide", func(w http.ResponseWriter, r *http.Request) { article.HandleToggleHideArticle(h, w, r) })
 	apiMux.HandleFunc("/api/articles/toggle-read-later", func(w http.ResponseWriter, r *http.Request) { article.HandleToggleReadLater(h, w, r) })
 	apiMux.HandleFunc("/api/articles/content", func(w http.ResponseWriter, r *http.Request) { article.HandleGetArticleContent(h, w, r) })
+	apiMux.HandleFunc("/api/articles/fetch-full", func(w http.ResponseWriter, r *http.Request) { article.HandleFetchFullArticle(h, w, r) })
 	apiMux.HandleFunc("/api/articles/unread-counts", func(w http.ResponseWriter, r *http.Request) { article.HandleGetUnreadCounts(h, w, r) })
 	apiMux.HandleFunc("/api/articles/mark-all-read", func(w http.ResponseWriter, r *http.Request) { article.HandleMarkAllAsRead(h, w, r) })
 	apiMux.HandleFunc("/api/articles/clear-read-later", func(w http.ResponseWriter, r *http.Request) { article.HandleClearReadLater(h, w, r) })
 	apiMux.HandleFunc("/api/articles/summarize", func(w http.ResponseWriter, r *http.Request) { summary.HandleSummarizeArticle(h, w, r) })
+	apiMux.HandleFunc("/api/articles/export/obsidian", func(w http.ResponseWriter, r *http.Request) { article.HandleExportToObsidian(h, w, r) })
 	apiMux.HandleFunc("/api/settings", func(w http.ResponseWriter, r *http.Request) { settings.HandleSettings(h, w, r) })
 	apiMux.HandleFunc("/api/refresh", func(w http.ResponseWriter, r *http.Request) { article.HandleRefresh(h, w, r) })
 	apiMux.HandleFunc("/api/progress", func(w http.ResponseWriter, r *http.Request) { article.HandleProgress(h, w, r) })
 	apiMux.HandleFunc("/api/opml/import", func(w http.ResponseWriter, r *http.Request) { opml.HandleOPMLImport(h, w, r) })
 	apiMux.HandleFunc("/api/opml/export", func(w http.ResponseWriter, r *http.Request) { opml.HandleOPMLExport(h, w, r) })
+	apiMux.HandleFunc("/api/opml/import-dialog", func(w http.ResponseWriter, r *http.Request) { opml.HandleOPMLImportDialog(h, w, r) })
+	apiMux.HandleFunc("/api/opml/export-dialog", func(w http.ResponseWriter, r *http.Request) { opml.HandleOPMLExportDialog(h, w, r) })
 	apiMux.HandleFunc("/api/check-updates", func(w http.ResponseWriter, r *http.Request) { update.HandleCheckUpdates(h, w, r) })
 	apiMux.HandleFunc("/api/download-update", func(w http.ResponseWriter, r *http.Request) { update.HandleDownloadUpdate(h, w, r) })
 	apiMux.HandleFunc("/api/install-update", func(w http.ResponseWriter, r *http.Request) { update.HandleInstallUpdate(h, w, r) })
@@ -243,6 +251,8 @@ func main() {
 	apiMux.HandleFunc("/api/network/detect", func(w http.ResponseWriter, r *http.Request) { networkhandlers.HandleDetectNetwork(h, w, r) })
 	apiMux.HandleFunc("/api/network/info", func(w http.ResponseWriter, r *http.Request) { networkhandlers.HandleGetNetworkInfo(h, w, r) })
 	apiMux.HandleFunc("/api/browser/open", func(w http.ResponseWriter, r *http.Request) { browser.HandleOpenURL(h, w, r) })
+	apiMux.HandleFunc("/api/freshrss/sync", func(w http.ResponseWriter, r *http.Request) { freshrssHandler.HandleSync(h, w, r) })
+	apiMux.HandleFunc("/api/freshrss/test-connection", func(w http.ResponseWriter, r *http.Request) { freshrssHandler.HandleTestConnection(h, w, r) })
 
 	// Static Files
 	log.Println("Setting up static files...")
@@ -360,45 +370,51 @@ func main() {
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
-		SingleInstance: &application.SingleInstanceOptions{
-			UniqueID:      "com.mrrss.app",
-			EncryptionKey: encryptionKey,
-			OnSecondInstanceLaunch: func(data application.SecondInstanceData) {
-				log.Printf("Second instance detected, bringing window to front")
-				if mainWindow != nil {
-					// Restore window state if it was stored (minimized to tray)
-					if lastWindowState.valid.Load() {
-						width := lastWindowState.width
-						height := lastWindowState.height
-						x := lastWindowState.x
-						y := lastWindowState.y
+		SingleInstance: func() *application.SingleInstanceOptions {
+			// Disable single instance on Linux due to potential D-Bus issues
+			if runtime.GOOS == "linux" {
+				return nil
+			}
+			return &application.SingleInstanceOptions{
+				UniqueID:      "com.mrrss.app",
+				EncryptionKey: encryptionKey,
+				OnSecondInstanceLaunch: func(data application.SecondInstanceData) {
+					log.Printf("Second instance detected, bringing window to front")
+					if mainWindow != nil {
+						// Restore window state if it was stored (minimized to tray)
+						if lastWindowState.valid.Load() {
+							width := lastWindowState.width
+							height := lastWindowState.height
+							x := lastWindowState.x
+							y := lastWindowState.y
 
-						// Ensure minimum window size
-						if width < 400 {
-							width = 1024
-						}
-						if height < 300 {
-							height = 768
-						}
+							// Ensure minimum window size
+							if width < 400 {
+								width = 1024
+							}
+							if height < 300 {
+								height = 768
+							}
 
-						// Ensure window is at least partially on screen
-						if x < -1000 || x > 3000 {
-							x = 100
-						}
-						if y < -1000 || y > 3000 {
-							y = 100
-						}
+							// Ensure window is at least partially on screen
+							if x < -1000 || x > 3000 {
+								x = 100
+							}
+							if y < -1000 || y > 3000 {
+								y = 100
+							}
 
-						log.Printf("Restoring window state: x=%d, y=%d, width=%d, height=%d", x, y, width, height)
-						mainWindow.SetSize(width, height)
-						mainWindow.SetPosition(x, y)
+							log.Printf("Restoring window state: x=%d, y=%d, width=%d, height=%d", x, y, width, height)
+							mainWindow.SetSize(width, height)
+							mainWindow.SetPosition(x, y)
+						}
+						// Show and unminimize the window
+						mainWindow.Show()
+						mainWindow.Restore()
 					}
-					// Show and unminimize the window
-					mainWindow.Show()
-					mainWindow.Restore()
-				}
-			},
-		},
+				},
+			}
+		}(),
 	})
 
 	// Set app instance to handler for browser integration
@@ -662,7 +678,36 @@ func main() {
 	go func() {
 		time.Sleep(2 * time.Second) // Small delay to allow app to start
 		log.Println("Detecting network speed...")
-		detector := network.NewDetector()
+
+		// Get proxy settings
+		proxyEnabled, _ := db.GetSetting("proxy_enabled")
+		proxyType, _ := db.GetSetting("proxy_type")
+		proxyHost, _ := db.GetSetting("proxy_host")
+		proxyPort, _ := db.GetSetting("proxy_port")
+		proxyUsername, _ := db.GetSetting("proxy_username")
+		proxyPassword, _ := db.GetSetting("proxy_password")
+
+		// Create HTTP client with proxy if enabled
+		var httpClient *http.Client
+		if proxyEnabled == "true" {
+			proxyURL := utils.BuildProxyURL(proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword)
+			if proxyURL != "" {
+				client, err := utils.CreateHTTPClient(proxyURL, 10*time.Second)
+				if err != nil {
+					log.Printf("Failed to create HTTP client with proxy: %v", err)
+					// Fall back to default client
+					httpClient = &http.Client{Timeout: 10 * time.Second}
+				} else {
+					httpClient = client
+				}
+			} else {
+				httpClient = &http.Client{Timeout: 10 * time.Second}
+			}
+		} else {
+			httpClient = &http.Client{Timeout: 10 * time.Second}
+		}
+
+		detector := network.NewDetector(httpClient)
 		detectCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 

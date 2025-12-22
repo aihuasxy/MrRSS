@@ -93,6 +93,42 @@ func TestURLsMatch(t *testing.T) {
 			url2:     "",
 			expected: true,
 		},
+		{
+			name:     "WeChat same article different params",
+			url1:     "https://mp.weixin.qq.com/s?__biz=MzIyODI1MzYyNA==&mid=2653550587&idx=1&sn=7674e614b87ed7d64644b944c709dc3a",
+			url2:     "https://mp.weixin.qq.com/s?__biz=MzIyODI1MzYyNA==&mid=2653550587&idx=1&sn=999999999999999999999999999999",
+			expected: true, // Same mid = same article
+		},
+		{
+			name:     "WeChat different articles",
+			url1:     "https://mp.weixin.qq.com/s?__biz=MzIyODI1MzYyNA==&mid=2653550587&idx=1&sn=7674e614b87ed7d64644b944c709dc3a",
+			url2:     "https://mp.weixin.qq.com/s?__biz=MzIyODI1MzYyNA==&mid=2653550611&idx=1&sn=133a083423e1a3aa01ae86837d46d5c1",
+			expected: false, // Different mid = different articles
+		},
+		{
+			name:     "Generic ID parameter preservation",
+			url1:     "https://example.com/article?id=123&utm_source=twitter",
+			url2:     "https://example.com/article?id=123&utm_source=facebook",
+			expected: true, // Same ID, different tracking params
+		},
+		{
+			name:     "Numeric parameter preservation",
+			url1:     "https://example.com/post/456?ref=homepage",
+			url2:     "https://example.com/post/456?ref=search",
+			expected: true, // Numeric path segment treated as ID
+		},
+		{
+			name:     "Tracking parameter filtering",
+			url1:     "https://example.com/page?utm_campaign=summer&utm_medium=email",
+			url2:     "https://example.com/page?utm_campaign=winter&utm_medium=social",
+			expected: true, // All tracking params ignored
+		},
+		{
+			name:     "Mixed important and tracking params",
+			url1:     "https://example.com/article?id=789&utm_source=newsletter&fbclid=abc123",
+			url2:     "https://example.com/article?id=789&utm_source=podcast&gclid=def456",
+			expected: true, // ID preserved, tracking params ignored
+		},
 	}
 
 	for _, tt := range tests {

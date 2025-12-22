@@ -46,14 +46,24 @@ func NewFetcher(db *database.DB, translator translation.Translator) *Fetcher {
 		executor = NewScriptExecutor(scriptsDir)
 	}
 
+	// Create HTTP client for feed parsing
+	httpClient, err := CreateHTTPClient("")
+	if err != nil {
+		// Fallback to default client if proxy setup fails
+		httpClient = &http.Client{Timeout: 30 * time.Second}
+	}
+
+	// Create parser with custom HTTP client to support localhost and other endpoints
+	parser := gofeed.NewParser()
+	parser.Client = httpClient
+
 	// Create high priority parser with shorter timeout for content fetching
 	highPriorityParser := gofeed.NewParser()
-	// Note: We can't easily set custom HTTP client on gofeed parser
-	// The priority will be handled at the application level
+	highPriorityParser.Client = httpClient
 
 	return &Fetcher{
 		db:                db,
-		fp:                gofeed.NewParser(),
+		fp:                parser,
 		highPriorityFp:    highPriorityParser,
 		translator:        translator,
 		scriptExecutor:    executor,
@@ -170,6 +180,7 @@ func (f *Fetcher) FetchAll(ctx context.Context) {
 	}
 	f.progress.IsRunning = true
 	f.progress.Current = 0
+	f.progress.Errors = make(map[int64]string)
 	f.mu.Unlock()
 
 	// Clear any queued individual feeds since we're doing a full refresh
@@ -238,11 +249,18 @@ Finish:
 }
 
 func (f *Fetcher) FetchFeed(ctx context.Context, feed models.Feed) {
-	// Use ParseFeedWithScript with normal priority for feed refresh
-	parsedFeed, err := f.ParseFeedWithScript(ctx, feed.URL, feed.ScriptPath, false) // Normal priority for refresh
+	// Use ParseFeedWithFeed with normal priority for feed refresh
+	parsedFeed, err := f.ParseFeedWithFeed(ctx, &feed, false) // Normal priority for refresh
 	if err != nil {
 		log.Printf("Error parsing feed %s: %v", feed.URL, err)
 		f.db.UpdateFeedError(feed.ID, err.Error())
+		// Add error to progress for immediate feedback
+		f.mu.Lock()
+		if f.progress.Errors == nil {
+			f.progress.Errors = make(map[int64]string)
+		}
+		f.progress.Errors[feed.ID] = err.Error()
+		f.mu.Unlock()
 		return
 	}
 
@@ -313,6 +331,7 @@ func (f *Fetcher) FetchSingleFeed(ctx context.Context, feed models.Feed) {
 		f.progress.IsRunning = true
 		f.progress.Total = queuedCount
 		f.progress.Current = 0
+		f.progress.Errors = make(map[int64]string)
 	} else {
 		// Already running, just update total to include this new feed
 		f.progress.Total = f.progress.Current + queuedCount

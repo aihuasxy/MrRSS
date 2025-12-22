@@ -1,0 +1,341 @@
+import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import type { Feed } from '@/types/models';
+import { useAppStore } from '@/stores/app';
+
+export type FeedType = 'url' | 'script' | 'xpath';
+export type ProxyMode = 'global' | 'custom' | 'none';
+export type RefreshMode = 'global' | 'fixed' | 'intelligent' | 'custom';
+
+export function useFeedForm(feed?: Feed) {
+  const { t } = useI18n();
+  const store = useAppStore();
+
+  // Check if image gallery feature is enabled
+  const imageGalleryEnabled = ref(false);
+
+  const feedType = ref<FeedType>('url');
+  const title = ref('');
+  const url = ref('');
+  const category = ref('');
+  const categorySelection = ref('');
+  const showCustomCategory = ref(false);
+  const scriptPath = ref('');
+  const hideFromTimeline = ref(false);
+  const isImageMode = ref(false);
+
+  // XPath fields
+  const xpathType = ref<'HTML+XPath' | 'XML+XPath'>('HTML+XPath');
+  const xpathItem = ref('');
+  const xpathItemTitle = ref('');
+  const xpathItemContent = ref('');
+  const xpathItemUri = ref('');
+  const xpathItemAuthor = ref('');
+  const xpathItemTimestamp = ref('');
+  const xpathItemTimeFormat = ref('');
+  const xpathItemThumbnail = ref('');
+  const xpathItemCategories = ref('');
+  const xpathItemUid = ref('');
+
+  // Proxy settings
+  const proxyMode = ref<ProxyMode>('global');
+  const proxyType = ref('http');
+  const proxyHost = ref('');
+  const proxyPort = ref('');
+  const proxyUsername = ref('');
+  const proxyPassword = ref('');
+
+  // Refresh settings
+  const refreshMode = ref<RefreshMode>('global');
+  const refreshInterval = ref(30);
+
+  const isSubmitting = ref(false);
+  const showAdvancedSettings = ref(false);
+
+  // Available scripts from the scripts directory
+  const availableScripts = ref<Array<{ name: string; path: string; type: string }>>([]);
+  const scriptsDir = ref('');
+
+  // Get unique categories from existing feeds
+  const existingCategories = computed(() => {
+    const categories = new Set<string>();
+    store.feeds.forEach((feed) => {
+      if (feed.category && feed.category.trim() !== '') {
+        categories.add(feed.category);
+      }
+    });
+    return Array.from(categories).sort();
+  });
+
+  // Watch for category selection changes
+  function handleCategoryChange(value?: string) {
+    if (value !== undefined) {
+      categorySelection.value = value;
+    }
+    if (categorySelection.value === '__custom__') {
+      showCustomCategory.value = true;
+      category.value = '';
+    } else {
+      showCustomCategory.value = false;
+      category.value = categorySelection.value;
+    }
+  }
+
+  async function loadImageGallerySetting() {
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const data = await res.json();
+        imageGalleryEnabled.value = data.image_gallery_enabled === 'true';
+      }
+    } catch (e) {
+      console.error('Failed to load settings:', e);
+    }
+  }
+
+  async function loadScripts() {
+    try {
+      const res = await fetch('/api/scripts/list');
+      if (res.ok) {
+        const data = await res.json();
+        availableScripts.value = data.scripts || [];
+        scriptsDir.value = data.scripts_dir || '';
+      }
+    } catch (e) {
+      console.error('Failed to load scripts:', e);
+    }
+  }
+
+  const isFormValid = computed(() => {
+    if (feedType.value === 'url') {
+      return url.value.trim() !== '';
+    } else if (feedType.value === 'script') {
+      return scriptPath.value.trim() !== '';
+    } else if (feedType.value === 'xpath') {
+      return url.value.trim() !== '' && xpathItem.value.trim() !== '';
+    }
+    return false;
+  });
+
+  // Validation for URL field
+  const isUrlInvalid = computed(() => {
+    return (feedType.value === 'url' || feedType.value === 'xpath') && !url.value.trim();
+  });
+
+  // Validation for script field
+  const isScriptInvalid = computed(() => {
+    return feedType.value === 'script' && !scriptPath.value.trim();
+  });
+
+  // Validation for XPath item field
+  const isXpathItemInvalid = computed(() => {
+    return feedType.value === 'xpath' && !xpathItem.value.trim();
+  });
+
+  function buildProxyUrl(): string {
+    if (proxyMode.value !== 'custom' || !proxyHost.value || !proxyPort.value) {
+      return '';
+    }
+
+    let auth = '';
+    if (proxyUsername.value) {
+      auth = proxyPassword.value
+        ? `${proxyUsername.value}:${proxyPassword.value}@`
+        : `${proxyUsername.value}@`;
+    }
+
+    return `${proxyType.value}://${auth}${proxyHost.value}:${proxyPort.value}`;
+  }
+
+  function getRefreshInterval(): number {
+    // Return 0 for global, -1 for intelligent, or the custom interval
+    switch (refreshMode.value) {
+      case 'global':
+        return 0;
+      case 'intelligent':
+        return -1;
+      case 'custom':
+        return refreshInterval.value;
+      default:
+        return 0;
+    }
+  }
+
+  function initializeFromFeed(feed: Feed) {
+    title.value = feed.title;
+    url.value = feed.url;
+    category.value = feed.category;
+    scriptPath.value = feed.script_path || '';
+    hideFromTimeline.value = feed.hide_from_timeline || false;
+    isImageMode.value = feed.is_image_mode || false;
+
+    // Initialize XPath fields
+    xpathType.value =
+      feed.type === 'HTML+XPath' || feed.type === 'XML+XPath'
+        ? (feed.type as 'HTML+XPath' | 'XML+XPath')
+        : 'HTML+XPath';
+    xpathItem.value = feed.xpath_item || '';
+    xpathItemTitle.value = feed.xpath_item_title || '';
+    xpathItemContent.value = feed.xpath_item_content || '';
+    xpathItemUri.value = feed.xpath_item_uri || '';
+    xpathItemAuthor.value = feed.xpath_item_author || '';
+    xpathItemTimestamp.value = feed.xpath_item_timestamp || '';
+    xpathItemTimeFormat.value = feed.xpath_item_time_format || '';
+    xpathItemThumbnail.value = feed.xpath_item_thumbnail || '';
+    xpathItemCategories.value = feed.xpath_item_categories || '';
+    xpathItemUid.value = feed.xpath_item_uid || '';
+
+    // Determine feed type based on feed properties
+    if (feed.script_path) {
+      feedType.value = 'script';
+    } else if (feed.xpath_item) {
+      feedType.value = 'xpath';
+    } else {
+      feedType.value = 'url';
+    }
+
+    // Initialize proxy settings
+    if (feed.proxy_url) {
+      proxyMode.value = 'custom';
+      // Parse proxy URL: protocol://[username:password@]host:port
+      try {
+        const proxyUrlObj = new URL(feed.proxy_url);
+        proxyType.value = proxyUrlObj.protocol.replace(':', '');
+        proxyHost.value = proxyUrlObj.hostname;
+        proxyPort.value = proxyUrlObj.port;
+        proxyUsername.value = proxyUrlObj.username;
+        proxyPassword.value = proxyUrlObj.password;
+      } catch (e) {
+        // Fallback for invalid URL format
+        console.error('Failed to parse proxy URL:', e);
+        window.showToast(t('invalidProxyUrl'), 'error');
+      }
+    } else if (feed.proxy_enabled) {
+      proxyMode.value = 'global';
+    } else {
+      proxyMode.value = 'none';
+    }
+
+    // Initialize refresh settings
+    const interval = feed.refresh_interval || 0;
+    if (interval === 0) {
+      refreshMode.value = 'global';
+    } else if (interval === -1) {
+      refreshMode.value = 'intelligent';
+    } else {
+      refreshMode.value = 'custom';
+      refreshInterval.value = interval;
+    }
+
+    // Initialize category selection
+    if (category.value && existingCategories.value.includes(category.value)) {
+      categorySelection.value = category.value;
+    } else if (category.value) {
+      // If category doesn't exist in list, show custom input
+      showCustomCategory.value = true;
+    }
+  }
+
+  function resetForm() {
+    title.value = '';
+    url.value = '';
+    category.value = '';
+    scriptPath.value = '';
+    hideFromTimeline.value = false;
+    isImageMode.value = false;
+    xpathType.value = 'HTML+XPath';
+    xpathItem.value = '';
+    xpathItemTitle.value = '';
+    xpathItemContent.value = '';
+    xpathItemUri.value = '';
+    xpathItemAuthor.value = '';
+    xpathItemTimestamp.value = '';
+    xpathItemTimeFormat.value = '';
+    xpathItemThumbnail.value = '';
+    xpathItemCategories.value = '';
+    xpathItemUid.value = '';
+    proxyMode.value = 'global';
+    proxyType.value = 'http';
+    proxyHost.value = '';
+    proxyPort.value = '';
+    proxyUsername.value = '';
+    proxyPassword.value = '';
+    refreshMode.value = 'global';
+    refreshInterval.value = 30;
+  }
+
+  async function openScriptsFolder() {
+    try {
+      await fetch('/api/scripts/open', { method: 'POST' });
+      window.showToast(t('scriptsFolderOpened'), 'success');
+    } catch (e) {
+      console.error('Failed to open scripts folder:', e);
+    }
+  }
+
+  onMounted(async () => {
+    await loadScripts();
+    await loadImageGallerySetting();
+
+    // Listen for settings changes
+    window.addEventListener('image-gallery-setting-changed', (e: Event) => {
+      const customEvent = e as CustomEvent;
+      imageGalleryEnabled.value = customEvent.detail.enabled;
+    });
+
+    if (feed) {
+      initializeFromFeed(feed);
+    }
+  });
+
+  return {
+    // State
+    imageGalleryEnabled,
+    feedType,
+    title,
+    url,
+    category,
+    categorySelection,
+    showCustomCategory,
+    scriptPath,
+    hideFromTimeline,
+    isImageMode,
+    xpathType,
+    xpathItem,
+    xpathItemTitle,
+    xpathItemContent,
+    xpathItemUri,
+    xpathItemAuthor,
+    xpathItemTimestamp,
+    xpathItemTimeFormat,
+    xpathItemThumbnail,
+    xpathItemCategories,
+    xpathItemUid,
+    proxyMode,
+    proxyType,
+    proxyHost,
+    proxyPort,
+    proxyUsername,
+    proxyPassword,
+    refreshMode,
+    refreshInterval,
+    isSubmitting,
+    showAdvancedSettings,
+    availableScripts,
+    scriptsDir,
+    existingCategories,
+
+    // Computed
+    isFormValid,
+    isUrlInvalid,
+    isScriptInvalid,
+    isXpathItemInvalid,
+
+    // Methods
+    handleCategoryChange,
+    buildProxyUrl,
+    getRefreshInterval,
+    resetForm,
+    openScriptsFolder,
+  };
+}

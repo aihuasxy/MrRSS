@@ -72,12 +72,14 @@ func (db *DB) Init() error {
 			"deepl_api_key", "deepl_endpoint", "baidu_app_id", "baidu_secret_key", "ai_api_key", "ai_endpoint", "ai_model",
 			"ai_translation_prompt", "ai_summary_prompt", "ai_usage_tokens", "ai_usage_limit", "auto_cleanup_enabled", "max_cache_size_mb", "max_article_age_days", "language", "theme",
 			"last_article_update", "show_hidden_articles", "hover_mark_as_read", "default_view_mode", "summary_enabled", "summary_length",
-			"summary_provider", "media_cache_enabled", "media_cache_max_size_mb", "media_cache_max_age_days",
+			"summary_provider", "summary_trigger_mode", "media_cache_enabled", "media_cache_max_size_mb", "media_cache_max_age_days",
 			"proxy_enabled", "proxy_type", "proxy_host", "proxy_port", "proxy_username", "proxy_password",
 			"shortcuts", "rules", "startup_on_boot", "close_to_tray", "google_translate_endpoint", "show_article_preview_images",
+			"obsidian_enabled", "obsidian_vault", "obsidian_vault_path",
 			"window_x", "window_y", "window_width", "window_height", "window_maximized",
 			"network_speed", "network_bandwidth_mbps", "network_latency_ms", "max_concurrent_refreshes", "last_network_test",
-			"image_gallery_enabled",
+			"image_gallery_enabled", "freshrss_enabled", "freshrss_server_url", "freshrss_username", "freshrss_api_password",
+			"full_text_fetch_enabled",
 		}
 		for _, key := range settingsKeys {
 			defaultVal := config.GetString(key)
@@ -110,6 +112,10 @@ func (db *DB) Init() error {
 		// Migration: Add is_image_mode column to feeds table for image gallery feature
 		// Error is ignored - if column exists, the operation fails harmlessly.
 		_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN is_image_mode BOOLEAN DEFAULT 0`)
+
+		// Migration: Add position column to feeds table for custom ordering
+		// Error is ignored - if column exists, the operation fails harmlessly.
+		_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN position INTEGER DEFAULT 0`)
 	})
 	return err
 }
@@ -120,12 +126,7 @@ func (db *DB) WaitForReady() {
 }
 
 func initSchema(db *sql.DB) error {
-	// First, run migrations to ensure all columns exist
-	// This must happen BEFORE creating indexes that depend on those columns
-	if err := runMigrations(db); err != nil {
-		return err
-	}
-
+	// First create tables
 	query := `
 	CREATE TABLE IF NOT EXISTS feeds (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -187,7 +188,17 @@ func initSchema(db *sql.DB) error {
 	CREATE INDEX IF NOT EXISTS idx_translation_cache_lookup ON translation_cache(source_text_hash, target_lang, provider);
 	`
 	_, err := db.Exec(query)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Then run migrations to ensure all columns exist
+	// This must happen AFTER creating tables
+	if err := runMigrations(db); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // runMigrations applies database migrations for existing databases
@@ -206,6 +217,19 @@ func runMigrations(db *sql.DB) error {
 
 	// Migration: Add video_url column for YouTube video support
 	_, _ = db.Exec(`ALTER TABLE articles ADD COLUMN video_url TEXT DEFAULT ''`)
+
+	// Migration: Add XPath support fields to feeds table
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN type TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item_title TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item_content TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item_uri TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item_author TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item_timestamp TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item_time_format TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item_thumbnail TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item_categories TEXT DEFAULT ''`)
+	_, _ = db.Exec(`ALTER TABLE feeds ADD COLUMN xpath_item_uid TEXT DEFAULT ''`)
 
 	return nil
 }

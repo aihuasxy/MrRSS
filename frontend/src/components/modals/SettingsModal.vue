@@ -6,6 +6,7 @@ import GeneralTab from './settings/general/GeneralTab.vue';
 import FeedsTab from './settings/feeds/FeedsTab.vue';
 import AITab from './settings/ai/AITab.vue';
 import NetworkTab from './settings/network/NetworkTab.vue';
+import PluginsTab from './settings/plugins/PluginsTab.vue';
 import ShortcutsTab from './settings/shortcuts/ShortcutsTab.vue';
 import RulesTab from './settings/rules/RulesTab.vue';
 import AboutTab from './settings/about/AboutTab.vue';
@@ -119,6 +120,12 @@ function handleDiscoverAll() {
           {{ t('network') }}
         </button>
         <button
+          :class="['tab-btn', activeTab === 'plugins' ? 'active' : '']"
+          @click="activeTab = 'plugins'"
+        >
+          {{ t('plugins') }}
+        </button>
+        <button
           :class="['tab-btn', activeTab === 'shortcuts' ? 'active' : '']"
           @click="activeTab = 'shortcuts'"
         >
@@ -141,6 +148,7 @@ function handleDiscoverAll() {
 
         <FeedsTab
           v-if="activeTab === 'feeds'"
+          :settings="settings"
           @import-opml="handleImportOPML"
           @export-opml="handleExportOPML"
           @cleanup-database="handleCleanupDatabase"
@@ -150,6 +158,7 @@ function handleDiscoverAll() {
           @batch-delete="handleBatchDelete"
           @batch-move="handleBatchMove"
           @discover-all="handleDiscoverAll"
+          @update:settings="settings = $event"
         />
 
         <AITab
@@ -160,6 +169,12 @@ function handleDiscoverAll() {
 
         <NetworkTab
           v-if="activeTab === 'network'"
+          :settings="settings"
+          @update:settings="settings = $event"
+        />
+
+        <PluginsTab
+          v-if="activeTab === 'plugins'"
           :settings="settings"
           @update:settings="settings = $event"
         />

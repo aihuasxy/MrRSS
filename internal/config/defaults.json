@@ -25,6 +25,7 @@
   "summary_enabled": true,
   "summary_length": "medium",
   "summary_provider": "local",
+  "summary_trigger_mode": "manual",
   "auto_cleanup_enabled": false,
   "max_cache_size_mb": 20,
   "max_article_age_days": 30,
@@ -47,10 +48,18 @@
   "window_height": "768",
   "window_maximized": "false",
   "show_article_preview_images": true,
+  "obsidian_enabled": false,
+  "obsidian_vault": "",
+  "obsidian_vault_path": "",
   "network_speed": "medium",
   "network_bandwidth_mbps": "0",
   "network_latency_ms": "0",
   "max_concurrent_refreshes": "5",
   "last_network_test": "",
-  "image_gallery_enabled": false
+  "image_gallery_enabled": false,
+  "freshrss_enabled": false,
+  "freshrss_server_url": "",
+  "freshrss_username": "",
+  "freshrss_api_password": "",
+  "full_text_fetch_enabled": true
 }

@@ -5,6 +5,43 @@ All notable changes to MrRSS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Supported drag-and-drop to reorder feeds or change feed categories. (#288)
+- Supported AI Chat on article content. And of course **it's disabled by default**! (#286)
+- Supported exporting articles to Obsidian. (#289)
+- Supported extracting full article content from original website when RSS feed only provides summary. (#266)
+
+### Changed
+
+- AI summarization is now triggered manually on default to avoid excessive API usage. Users can enable automatic summarization in settings if desired. (#287)
+- Added Plugin setting tab in settings page and moved FreshRSS synchronization settings there.
+- Improved icons and translations for better user experience.
+
+## [1.3.6] - 2025-12-22
+
+### Added
+
+- Supported importing feeds with HTML+XPath / XML+XPath type from OPML files. (#264)
+- Supported FreshRSS synchronization. (#245)
+
+### Changed
+
+- Improved error display for customized scripts when adding/editing feeds. (#264)
+- Network connection test now supports proxy settings. (#256)
+
+### Fixed
+
+- Fixed the issue where different articles display the same content due to incorrect URL matching. (#257)
+- Fixed the issue where import and export of OPML files did not work correctly on macOS. (#263)
+- Fixed the issue where localhost cannot be processed correctly. (#257)
+
+### Removed
+
+- Removed single instance lock on Linux platform to avoid D-Bus related issues. (#246)
+
 ## [1.3.5] - 2025-12-20
 
 **BREAKING**: AI-based summarization and translation now need a full path instead of just endpoint URL.

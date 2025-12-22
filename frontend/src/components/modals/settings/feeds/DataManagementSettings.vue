@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { ref, type Ref } from 'vue';
 import {
   PhHardDrives,
   PhUpload,
@@ -12,24 +11,14 @@ import {
 const { t } = useI18n();
 
 const emit = defineEmits<{
-  'import-opml': [event: Event];
+  'import-opml': [];
   'export-opml': [];
   'cleanup-database': [];
   'discover-all': [];
 }>();
 
-const opmlInput: Ref<HTMLInputElement | null> = ref(null);
-
-function clickFileInput() {
-  opmlInput.value?.click();
-}
-
-function handleImportOPML(event: Event) {
-  emit('import-opml', event);
-  // Reset the input value so the same file can be selected again
-  if (opmlInput.value) {
-    opmlInput.value.value = '';
-  }
+function handleImportOPML() {
+  emit('import-opml');
 }
 
 function handleExportOPML() {
@@ -56,17 +45,10 @@ function handleDiscoverAll() {
     <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-2 sm:mb-3">
       <button
         class="btn-secondary flex-1 justify-center text-sm sm:text-base"
-        @click="clickFileInput"
+        @click="handleImportOPML"
       >
         <PhUpload :size="18" class="sm:w-5 sm:h-5" /> {{ t('importOPML') }}
       </button>
-      <input
-        ref="opmlInput"
-        type="file"
-        accept=".opml,.xml,application/xml,text/xml"
-        class="hidden"
-        @change="handleImportOPML"
-      />
       <button
         class="btn-secondary flex-1 justify-center text-sm sm:text-base"
         @click="handleExportOPML"

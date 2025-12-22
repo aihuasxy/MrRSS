@@ -35,3 +35,50 @@ func HandleGetArticleContent(h *core.Handler, w http.ResponseWriter, r *http.Req
 		"content": content,
 	})
 }
+
+// HandleFetchFullArticle fetches the full article content from the original URL using readability.
+func HandleFetchFullArticle(h *core.Handler, w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	articleIDStr := r.URL.Query().Get("id")
+	articleID, err := strconv.ParseInt(articleIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid article ID", http.StatusBadRequest)
+		return
+	}
+
+	// Get the article from database
+	article, err := h.DB.GetArticleByID(articleID)
+	if err != nil {
+		log.Printf("Error getting article: %v", err)
+		http.Error(w, "Failed to get article", http.StatusInternalServerError)
+		return
+	}
+
+	if article.URL == "" {
+		http.Error(w, "Article has no URL", http.StatusBadRequest)
+		return
+	}
+
+	// Check if full-text fetching is enabled
+	fullTextEnabledStr, _ := h.DB.GetSetting("full_text_fetch_enabled")
+	if fullTextEnabledStr != "true" {
+		http.Error(w, "Full-text fetching is disabled", http.StatusForbidden)
+		return
+	}
+
+	// Fetch full content
+	fullContent, err := h.FetchFullArticleContent(article.URL)
+	if err != nil {
+		log.Printf("Error fetching full article content: %v", err)
+		http.Error(w, "Failed to fetch full article content", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"content": fullContent,
+	})
+}
