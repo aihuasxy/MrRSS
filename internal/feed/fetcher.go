@@ -84,20 +84,42 @@ func (f *Fetcher) GetStaggeredDelay(feedID int64, totalFeeds int) time.Duration 
 
 // getConcurrencyLimit returns the maximum number of concurrent feed refreshes
 // based on network detection or defaults to 5 if not configured
-func (f *Fetcher) getConcurrencyLimit() int {
+// For large numbers of feeds, concurrency is reduced to prevent connection exhaustion
+func (f *Fetcher) getConcurrencyLimit(feedCount int) int {
 	concurrencyStr, err := f.db.GetSetting("max_concurrent_refreshes")
 	if err != nil || concurrencyStr == "" {
-		return 5 // Default concurrency
+		concurrency := 5 // Default concurrency
+		// Reduce concurrency for large feed counts to prevent connection exhaustion
+		if feedCount > 20 {
+			concurrency = 2
+		} else if feedCount > 10 {
+			concurrency = 3
+		}
+		return concurrency
 	}
 
 	concurrency, err := strconv.Atoi(concurrencyStr)
 	if err != nil || concurrency < 1 {
-		return 5 // Default on parse error or invalid value
+		concurrency := 5 // Default on parse error or invalid value
+		// Reduce concurrency for large feed counts
+		if feedCount > 20 {
+			concurrency = 2
+		} else if feedCount > 10 {
+			concurrency = 3
+		}
+		return concurrency
 	}
 
 	// Cap at reasonable limits
 	if concurrency > 20 {
 		concurrency = 20
+	}
+
+	// Reduce concurrency for large feed counts to prevent connection exhaustion
+	if feedCount > 50 {
+		concurrency = min(concurrency, 3)
+	} else if feedCount > 20 {
+		concurrency = min(concurrency, 5)
 	}
 
 	return concurrency
@@ -205,7 +227,7 @@ func (f *Fetcher) FetchAll(ctx context.Context) {
 	f.mu.Unlock()
 
 	var wg sync.WaitGroup
-	concurrency := f.getConcurrencyLimit()
+	concurrency := f.getConcurrencyLimit(len(feeds))
 	sem := make(chan struct{}, concurrency) // Limit concurrency based on network speed
 
 	for _, feed := range feeds {
@@ -397,7 +419,7 @@ func (f *Fetcher) FetchFeedsByIDs(ctx context.Context, feedIDs []int64) {
 	f.setupTranslator()
 
 	var wg sync.WaitGroup
-	concurrency := f.getConcurrencyLimit()
+	concurrency := f.getConcurrencyLimit(len(feedIDs))
 	sem := make(chan struct{}, concurrency) // Limit concurrency based on network speed
 
 	for _, feedID := range feedIDs {

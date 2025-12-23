@@ -151,3 +151,22 @@ tasks:
     preconditions:
       - sh: '[ -n "{{.SIGN_CERTIFICATE}}" ] || [ -n "{{.SIGN_THUMBPRINT}}" ]'
         msg: "Either SIGN_CERTIFICATE or SIGN_THUMBPRINT is required. Set it in the vars section at the top of build/windows/Taskfile.yml"
+  build:server:
+    summary: Builds the server version using Docker
+    deps:
+      - task: common:build:frontend
+    cmds:
+      - docker build -f Dockerfile.server -t mrrss-server:latest .
+      - docker create --name mrrss-server-temp mrrss-server:latest
+      - docker cp mrrss-server-temp:/app/mrrss-server {{.BIN_DIR}}/{{.APP_NAME}}-server.exe
+      - docker rm mrrss-server-temp
+    preconditions:
+      - sh: docker info > /dev/null 2>&1
+        msg: "Docker is required for building the server version"
+
+  run:server:
+    summary: Runs the server version
+    deps:
+      - task: build:server
+    cmds:
+      - '{{.BIN_DIR}}/{{.APP_NAME}}-server.exe'

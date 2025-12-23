@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { PhSpinnerGap, PhArticleNyTimes } from '@phosphor-icons/vue';
 import type { Article } from '@/types/models';
 import ArticleTitle from './parts/ArticleTitle.vue';
 import ArticleSummary from './parts/ArticleSummary.vue';
@@ -8,6 +9,8 @@ import ArticleLoading from './parts/ArticleLoading.vue';
 import ArticleBody from './parts/ArticleBody.vue';
 import AudioPlayer from './parts/AudioPlayer.vue';
 import VideoPlayer from './parts/VideoPlayer.vue';
+import ArticleChatButton from './ArticleChatButton.vue';
+import ArticleChatPanel from './ArticleChatPanel.vue';
 import { useArticleSummary } from '@/composables/article/useArticleSummary';
 import { useArticleTranslation } from '@/composables/article/useArticleTranslation';
 import { useArticleRendering } from '@/composables/article/useArticleRendering';
@@ -16,6 +19,7 @@ import {
   restorePreservedElements,
   hasOnlyPreservedContent,
 } from '@/composables/article/useContentTranslation';
+import { useSettings } from '@/composables/core/useSettings';
 import './ArticleContent.css';
 
 interface SummaryResult {
@@ -31,14 +35,60 @@ interface Props {
   isLoadingContent: boolean;
   attachImageEventListeners?: () => void;
   showTranslations?: boolean;
+  showContent?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showTranslations: true,
   attachImageEventListeners: undefined,
+  showContent: true,
 });
 
 const { t } = useI18n();
+
+// Chat state
+const { settings: appSettings, fetchSettings } = useSettings();
+const isChatPanelOpen = ref(false);
+
+// Full-text fetching state
+const isFetchingFullArticle = ref(false);
+const fullArticleContent = ref('');
+
+// Fetch settings on mount to get actual values
+onMounted(async () => {
+  try {
+    await fetchSettings();
+  } catch (e) {
+    console.error('Error fetching settings for chat:', e);
+  }
+});
+
+// Computed to check if chat should be shown
+const showChatButton = computed(() => {
+  return (
+    appSettings.value.ai_chat_enabled &&
+    !props.isLoadingContent &&
+    props.articleContent &&
+    props.showContent
+  );
+});
+
+// Computed to check if full-text fetching should be shown
+const showFullTextButton = computed(() => {
+  return (
+    appSettings.value.full_text_fetch_enabled &&
+    !props.isLoadingContent &&
+    props.articleContent &&
+    props.article?.url &&
+    props.showContent &&
+    !fullArticleContent.value // Don't show if we already have full content
+  );
+});
+
+// Computed for the content to display (full article if available, otherwise RSS content)
+const displayContent = computed(() => {
+  return fullArticleContent.value || props.articleContent;
+});
 
 // Use composables for summary and translation
 const {
@@ -55,6 +105,8 @@ const { enhanceRendering, renderMathFormulas, highlightCodeBlocks } = useArticle
 
 // Computed properties for easier access
 const summaryEnabled = computed(() => summarySettings.value.enabled);
+const summaryProvider = computed(() => summarySettings.value.provider);
+const summaryTriggerMode = computed(() => summarySettings.value.triggerMode);
 const translationEnabled = computed(() => translationSettings.value.enabled);
 const targetLanguage = computed(() => translationSettings.value.targetLang);
 
@@ -108,6 +160,47 @@ async function translateText(text: string): Promise<string> {
   return '';
 }
 
+// Fetch full article content from the original URL
+async function fetchFullArticle() {
+  if (!props.article?.id) return;
+
+  isFetchingFullArticle.value = true;
+  try {
+    const res = await fetch(`/api/articles/fetch-full?id=${props.article.id}`, {
+      method: 'POST',
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      fullArticleContent.value = data.content || '';
+      window.showToast(t('fullArticleFetched'), 'success');
+
+      // After fetching full content, regenerate summary and trigger translation
+      if (props.article) {
+        if (shouldAutoGenerateSummary()) {
+          setTimeout(() => generateSummary(props.article), 100);
+        }
+        if (translationEnabled.value) {
+          // Reset translation tracking to allow re-translation with full content
+          lastTranslatedArticleId.value = null;
+          translateTitle(props.article);
+          // Wait for DOM to update with new content before translating
+          await nextTick();
+          translateContentParagraphs(fullArticleContent.value);
+        }
+      }
+    } else {
+      console.error('Error fetching full article:', res.status);
+      window.showToast(t('errorFetchingFullArticle'), 'error');
+    }
+  } catch (e) {
+    console.error('Error fetching full article:', e);
+    window.showToast(t('errorFetchingFullArticle'), 'error');
+  } finally {
+    isFetchingFullArticle.value = false;
+  }
+}
+
 // Generate summary for the current article
 async function generateSummary(article: Article) {
   if (!summaryEnabled.value || !article) {
@@ -117,7 +210,7 @@ async function generateSummary(article: Article) {
   summaryResult.value = null;
   translatedSummary.value = '';
 
-  const result = await generateSummaryComposable(article);
+  const result = await generateSummaryComposable(article, displayContent.value);
   summaryResult.value = result;
 
   // Auto-translate summary if translation is enabled
@@ -126,6 +219,21 @@ async function generateSummary(article: Article) {
     translatedSummary.value = await translateText(result.summary);
     isTranslatingSummary.value = false;
   }
+}
+
+// Check if should auto-generate summary
+function shouldAutoGenerateSummary(): boolean {
+  if (!summaryEnabled.value) return false;
+
+  // For local provider, always auto-generate
+  if (summaryProvider.value === 'local') return true;
+
+  // For AI provider, check trigger mode
+  if (summaryProvider.value === 'ai') {
+    return summaryTriggerMode.value === 'auto';
+  }
+
+  return false;
 }
 
 // Translate title
@@ -309,9 +417,10 @@ watch(
       translatedSummary.value = '';
       translatedTitle.value = '';
       lastTranslatedArticleId.value = null; // Reset translation tracking
+      fullArticleContent.value = ''; // Reset full article content when switching articles
 
       if (props.article) {
-        if (summaryEnabled.value) {
+        if (shouldAutoGenerateSummary()) {
           // Delay summary generation when switching articles
           setTimeout(() => generateSummary(props.article), 100);
         }
@@ -336,7 +445,7 @@ watch(
       await reattachImageInteractions();
 
       // Delay summary generation to prioritize content display
-      if (summaryEnabled.value) {
+      if (shouldAutoGenerateSummary()) {
         setTimeout(() => generateSummary(props.article), 100);
       }
       if (translationEnabled.value && lastTranslatedArticleId.value !== props.article.id) {
@@ -358,7 +467,7 @@ onMounted(async () => {
       await reattachImageInteractions();
     }
 
-    if (summaryEnabled.value && props.articleContent) {
+    if (shouldAutoGenerateSummary() && props.articleContent) {
       // Delay summary generation to ensure content displays first
       setTimeout(() => generateSummary(props.article), 100);
     }
@@ -419,16 +528,54 @@ watch(
         :translated-summary="translatedSummary"
         :is-translating-summary="isTranslatingSummary"
         :translation-enabled="translationEnabled"
+        :summary-provider="summaryProvider"
+        :summary-trigger-mode="summaryTriggerMode"
+        @generate-summary="generateSummary(props.article)"
       />
+
+      <!-- Full-text fetch button -->
+      <div v-if="showFullTextButton" class="flex justify-center mt-4 mb-4">
+        <button
+          :disabled="isFetchingFullArticle"
+          class="btn-secondary flex items-center gap-2"
+          @click="fetchFullArticle"
+        >
+          <PhSpinnerGap v-if="isFetchingFullArticle" :size="16" class="animate-spin" />
+          <PhArticleNyTimes v-else :size="16" />
+          <span>{{
+            isFetchingFullArticle ? t('fetchingFullArticle') : t('fetchFullArticle')
+          }}</span>
+        </button>
+      </div>
 
       <ArticleLoading v-if="isLoadingContent" />
 
       <ArticleBody
         v-else
-        :article-content="articleContent"
+        :article-content="displayContent"
         :is-translating-content="isTranslatingContent"
         :has-media-content="!!(article.audio_url || article.video_url)"
       />
     </div>
+
+    <!-- Chat Button (shown when content is loaded and chat is enabled) -->
+    <ArticleChatButton v-if="showChatButton && !isChatPanelOpen" @click="isChatPanelOpen = true" />
+
+    <!-- Chat Panel -->
+    <ArticleChatPanel
+      v-if="isChatPanelOpen"
+      :article="article"
+      :article-content="articleContent"
+      :settings="{ ai_chat_enabled: appSettings.ai_chat_enabled }"
+      @close="isChatPanelOpen = false"
+    />
   </div>
 </template>
+
+<style scoped>
+@reference "../../../../style.css";
+
+.btn-secondary {
+  @apply bg-bg-tertiary border border-border text-text-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-md cursor-pointer flex items-center gap-1.5 sm:gap-2 font-medium hover:bg-bg-secondary transition-colors;
+}
+</style>

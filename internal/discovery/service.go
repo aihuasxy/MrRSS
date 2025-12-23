@@ -11,7 +11,7 @@ import (
 // Discovery configuration constants
 const (
 	// MaxConcurrentRSSChecks limits the number of concurrent RSS feed checks
-	MaxConcurrentRSSChecks = 15
+	MaxConcurrentRSSChecks = 8
 	// MaxConcurrentPathChecks limits the number of concurrent common path checks
 	MaxConcurrentPathChecks = 5
 	// HTTPClientTimeout is the timeout for HTTP requests

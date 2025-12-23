@@ -5,6 +5,26 @@ All notable changes to MrRSS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.7] - 2025-12-23
+
+### Added
+
+- Supported server mode for self-hosted web application deployment. (#267) (@caoli5288)
+- Supported drag-and-drop to reorder feeds or change feed categories. (#288)
+- Supported AI Chat on article content. And of course **it's disabled by default**! (#286)
+- Supported exporting articles to Obsidian. (#289)
+- Supported extracting full article content from original website when RSS feed only provides summary. (#266)
+
+### Changed
+
+- AI summarization is now triggered manually on default to avoid excessive API usage. Users can enable automatic summarization in settings if desired. (#287)
+- Added Plugin setting tab in settings page and moved FreshRSS synchronization settings there.
+- Improved icons and translations for better user experience.
+
+### Fixed
+
+- Fixed the issue where concurrent feed refreshes exceed network capacity limit. (#262)
+
 ## [1.3.6] - 2025-12-22
 
 ### Added

@@ -6,12 +6,15 @@ interface SummarySettings {
   enabled: boolean;
   length: string;
   provider: string;
+  triggerMode: string;
 }
 
 interface SummaryResult {
   summary: string;
   sentence_count: number;
   is_too_short: boolean;
+  limit_reached?: boolean;
+  used_fallback?: boolean;
   error?: string;
 }
 
@@ -21,6 +24,7 @@ export function useArticleSummary() {
     enabled: false,
     length: 'medium',
     provider: 'local',
+    triggerMode: 'auto',
   });
   const summaryCache: Ref<Map<number, SummaryResult>> = ref(new Map());
   const loadingSummaries: Ref<Set<number>> = ref(new Set());
@@ -34,6 +38,7 @@ export function useArticleSummary() {
         enabled: data.summary_enabled === 'true',
         length: data.summary_length || 'medium',
         provider: data.summary_provider || 'local',
+        triggerMode: data.summary_trigger_mode || 'manual',
       };
     } catch (e) {
       console.error('Error loading summary settings:', e);
@@ -41,7 +46,10 @@ export function useArticleSummary() {
   }
 
   // Generate summary for an article
-  async function generateSummary(article: Article): Promise<SummaryResult | null> {
+  async function generateSummary(
+    article: Article,
+    content?: string
+  ): Promise<SummaryResult | null> {
     if (!summarySettings.value.enabled) {
       return null;
     }
@@ -65,6 +73,7 @@ export function useArticleSummary() {
         body: JSON.stringify({
           article_id: article.id,
           length: summarySettings.value.length,
+          content: content,
         }),
       });
 
@@ -78,14 +87,50 @@ export function useArticleSummary() {
         }
 
         return data;
+      } else {
+        // Handle API errors properly
+        let errorMessage = `${t('summaryGenerationFailed')}: ${res.status} ${res.statusText}`;
+
+        try {
+          const errorData = await res.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (jsonError) {
+          // If we can't parse JSON, use the status text
+          console.error('Error parsing error response:', jsonError);
+        }
+
+        console.error('Summary generation failed:', errorMessage);
+
+        // Cache the error to show in UI
+        const errorResult: SummaryResult = {
+          summary: '',
+          sentence_count: 0,
+          is_too_short: false,
+          error: errorMessage,
+        };
+        summaryCache.value.set(article.id, errorResult);
+
+        return errorResult;
       }
     } catch (e) {
+      const errorMessage = `${t('summaryGenerationFailed')}: ${e instanceof Error ? e.message : t('unknownError')}`;
       console.error('Error generating summary:', e);
+
+      // Cache the error to show in UI
+      const errorResult: SummaryResult = {
+        summary: '',
+        sentence_count: 0,
+        is_too_short: false,
+        error: errorMessage,
+      };
+      summaryCache.value.set(article.id, errorResult);
+
+      return errorResult;
     } finally {
       loadingSummaries.value.delete(article.id);
     }
-
-    return null;
   }
 
   // Get summary from cache
@@ -108,11 +153,17 @@ export function useArticleSummary() {
   }
 
   // Update summary settings from event
-  function handleSummarySettingsChange(enabled: boolean, length: string, provider?: string): void {
+  function handleSummarySettingsChange(
+    enabled: boolean,
+    length: string,
+    provider?: string,
+    triggerMode?: string
+  ): void {
     summarySettings.value = {
       enabled,
       length,
       provider: provider || summarySettings.value.provider,
+      triggerMode: triggerMode || summarySettings.value.triggerMode,
     };
     // Clear cache when settings change to regenerate with new settings
     clearSummaryCache();

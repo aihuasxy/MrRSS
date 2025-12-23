@@ -142,11 +142,23 @@ func TestProgressStructFields(t *testing.T) {
 	if p.Stage != "checking_rss" {
 		t.Errorf("Expected stage 'checking_rss', got %q", p.Stage)
 	}
+	if p.Message != "Checking RSS feed" {
+		t.Errorf("Expected message 'Checking RSS feed', got %q", p.Message)
+	}
+	if p.Detail != "https://example.com" {
+		t.Errorf("Expected detail 'https://example.com', got %q", p.Detail)
+	}
 	if p.Current != 5 {
 		t.Errorf("Expected current 5, got %d", p.Current)
 	}
 	if p.Total != 10 {
 		t.Errorf("Expected total 10, got %d", p.Total)
+	}
+	if p.FeedName != "Test Feed" {
+		t.Errorf("Expected feed name 'Test Feed', got %q", p.FeedName)
+	}
+	if p.FoundCount != 3 {
+		t.Errorf("Expected found count 3, got %d", p.FoundCount)
 	}
 	if p.FoundCount != 3 {
 		t.Errorf("Expected found_count 3, got %d", p.FoundCount)

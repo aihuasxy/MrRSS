@@ -3,7 +3,7 @@
   <h1>MrRSS</h1>
   <p><strong>一个现代化的跨平台桌面 RSS 阅读器</strong></p>
 
-   [![Version](https://img.shields.io/badge/version-1.3.6-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
+   [![Version](https://img.shields.io/badge/version-1.3.7-blue.svg)](https://github.com/WCY-dt/MrRSS/releases)
   [![License](https://img.shields.io/badge/license-GPLv3-green.svg)](LICENSE)
    [![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
   [![Wails](https://img.shields.io/badge/Wails-v3%20alpha-red)](https://wails.io/)
@@ -14,22 +14,17 @@
   </p>
 </div>
 
-> [!NOTE]
-> 本项目为跨平台应用，在 MacOS 上的部分功能可能受限于系统权限设置。如果您遇到任何问题，请[在 GitHub 上报告](https://github.com/WCY-dt/MrRSS/issues)。
-
 ---
 
 ## ✨ 功能特性
 
-- 🖥️ **跨平台**: 适用于 Windows、macOS 和 Linux 的原生桌面应用
-- 🌐 **自动翻译**: 使用翻译 API 或 AI 服务翻译文章标题和内容
-- 🔍 **智能订阅源发现**: 自动从友链和相关来源发现新的订阅源
-- ⭐ **收藏与阅读追踪**: 保存文章并追踪已读/未读状态
-- 📝 **文章摘要**: 使用本地 TF-IDF/TextRank 算法或 AI 生成文章摘要
-- 🎨 **现代 UI**: 简洁、响应式的界面，支持深色模式
-- 📦 **OPML 导入/导出**: 轻松从其他 RSS 阅读器迁移
-- 📋 **智能过滤规则**: 使用强大的自定义规则自动组织订阅源
-- 🏭 **自定义自动化脚本**: 支持运行用户定义的自动化脚本以获取订阅源
+- 🖥️ **跨平台支持**: 适用于 Windows、macOS 和 Linux 的原生桌面应用，体验流畅一致
+- 🌐 **自动翻译与摘要**: 自动翻译文章标题与正文，并生成简洁的内容摘要，助你快速获取信息
+- 🔍 **智能订阅源发现**: 能够从相关来源自动发现并推荐新的 RSS 订阅源，持续丰富你的阅读库
+- 🤖 **AI 增强功能**: 集成先进 AI 技术，赋能翻译、摘要、推荐等多种功能，让阅读更智能
+- 🎨 **现代交互界面**: 采用简洁、美观的响应式设计，支持深色模式，提供舒适沉浸的视觉感受
+- 📦 **OPML 导入/导出**: 支持一键导入或导出 OPML 文件，轻松从其他 RSS 阅读器迁移订阅
+- 🏭 **自定义脚本与自动化**: 内置过滤器、脚本与 XPath 系统，支持高度自定义的自动化流程
 
 ## 📸 截图
 
@@ -233,6 +228,21 @@ cd frontend
 npm test
 ```
 
+### 服务器模式（仅限 API）
+
+对于服务器部署和 API 集成，请使用无界面服务器版本：
+
+```bash
+# 使用 Docker（推荐）
+docker run -p 1234:1234 mrrss-server:latest
+
+# 或从源码构建
+go build -tags server -o mrrss-server .
+./mrrss-server
+```
+
+请参阅[服务器模式文档](docs/SERVER_MODE.md)以获取完整的 API 参考和部署指南。
+
 </div>
 
 </details>
@@ -272,6 +282,7 @@ npm test
 ---
 
 <div align="center">
+  <img src="imgs/sponsor.png" alt="Sponsor MrRSS"/>
   <p>Made with ❤️ by the MrRSS Team</p>
   <p>⭐ 如果您觉得这个项目有用，请在 GitHub 上给我们点星！</p>
 </div>

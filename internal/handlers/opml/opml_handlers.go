@@ -1,3 +1,5 @@
+//go:build !server
+
 package opml
 
 import (
@@ -108,13 +110,24 @@ func HandleOPMLExport(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 // HandleOPMLImportDialog opens a file dialog to select OPML file for import.
 func HandleOPMLImportDialog(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	if h.App == nil {
-		log.Printf("App instance not available for dialog integration")
-		http.Error(w, "Dialog integration not available", http.StatusInternalServerError)
+		log.Printf("File dialog not available in server mode")
+		http.Error(w, "File dialog not available in server mode. Use /api/opml/import endpoint with file upload instead.", http.StatusNotImplemented)
 		return
 	}
 
 	// Open file dialog to select OPML file
-	filePath, err := h.App.Dialog.OpenFileWithOptions(&application.OpenFileDialogOptions{
+	app, ok := h.App.(interface {
+		Dialog() interface {
+			OpenFileWithOptions(*application.OpenFileDialogOptions) interface{ PromptForSingleSelection() (string, error) }
+		}
+	})
+	if !ok {
+		log.Printf("File dialog not available in server mode")
+		http.Error(w, "File dialog not available in server mode. Use /api/opml/import endpoint with file upload instead.", http.StatusNotImplemented)
+		return
+	}
+
+	filePath, err := app.Dialog().OpenFileWithOptions(&application.OpenFileDialogOptions{
 		Title: "Select OPML File",
 		Filters: []application.FileFilter{
 			{
@@ -200,8 +213,8 @@ func HandleOPMLImportDialog(h *core.Handler, w http.ResponseWriter, r *http.Requ
 // HandleOPMLExportDialog opens a save dialog to export OPML file.
 func HandleOPMLExportDialog(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	if h.App == nil {
-		log.Printf("App instance not available for dialog integration")
-		http.Error(w, "Dialog integration not available", http.StatusInternalServerError)
+		log.Printf("File dialog operations are not available in server mode")
+		http.Error(w, "File dialog operations are not available in server mode. Use the direct export endpoint instead.", http.StatusNotImplemented)
 		return
 	}
 
@@ -220,7 +233,18 @@ func HandleOPMLExportDialog(h *core.Handler, w http.ResponseWriter, r *http.Requ
 	}
 
 	// Open save dialog
-	filePath, err := h.App.Dialog.SaveFileWithOptions(&application.SaveFileDialogOptions{
+	app, ok := h.App.(interface {
+		Dialog() interface {
+			SaveFileWithOptions(*application.SaveFileDialogOptions) interface{ PromptForSingleSelection() (string, error) }
+		}
+	})
+	if !ok {
+		log.Printf("File dialog not available in server mode")
+		http.Error(w, "File dialog not available in server mode. Use /api/opml/export endpoint with direct download instead.", http.StatusNotImplemented)
+		return
+	}
+
+	filePath, err := app.Dialog().SaveFileWithOptions(&application.SaveFileDialogOptions{
 		Title:    "Save OPML File",
 		Filename: "subscriptions.opml",
 		Filters: []application.FileFilter{

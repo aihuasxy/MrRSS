@@ -40,23 +40,34 @@ func TestGetConcurrencyLimitVariants(t *testing.T) {
 	db := setupDBForFeedTests(t)
 	f := NewFetcher(db, nil)
 
-	if got := f.getConcurrencyLimit(); got != 5 {
+	// Test with small feed count (normal concurrency)
+	if got := f.getConcurrencyLimit(5); got != 5 {
 		t.Fatalf("expected default 5, got %d", got)
 	}
 
 	db.SetSetting("max_concurrent_refreshes", "3")
-	if got := f.getConcurrencyLimit(); got != 3 {
+	if got := f.getConcurrencyLimit(5); got != 3 {
 		t.Fatalf("expected 3, got %d", got)
 	}
 
 	db.SetSetting("max_concurrent_refreshes", "abc")
-	if got := f.getConcurrencyLimit(); got != 5 {
+	if got := f.getConcurrencyLimit(5); got != 5 {
 		t.Fatalf("invalid value should fallback to 5, got %d", got)
 	}
 
 	db.SetSetting("max_concurrent_refreshes", "100")
-	if got := f.getConcurrencyLimit(); got != 20 {
+	if got := f.getConcurrencyLimit(5); got != 20 {
 		t.Fatalf("capped at 20, got %d", got)
+	}
+
+	// Test with large feed count (reduced concurrency)
+	db.SetSetting("max_concurrent_refreshes", "10")
+	if got := f.getConcurrencyLimit(30); got != 5 {
+		t.Fatalf("expected reduced to 5 for 30 feeds, got %d", got)
+	}
+
+	if got := f.getConcurrencyLimit(60); got != 3 {
+		t.Fatalf("expected reduced to 3 for 60 feeds, got %d", got)
 	}
 }
 

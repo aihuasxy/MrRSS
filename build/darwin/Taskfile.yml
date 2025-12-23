@@ -72,9 +72,9 @@ tasks:
           <key>CFBundlePackageType</key>
           <string>APPL</string>
           <key>CFBundleShortVersionString</key>
-          <string>1.3.6</string>
+          <string>1.3.7</string>
           <key>CFBundleVersion</key>
-          <string>1.3.6</string>
+          <string>1.3.7</string>
           <key>LSMinimumSystemVersion</key>
           <string>10.13</string>
           <key>NSHighResolutionCapable</key>
@@ -133,3 +133,22 @@ tasks:
     preconditions:
       - sh: '[ -n "{{.NOTARIZATION_PROFILE}}" ]'
         msg: "NOTARIZATION_PROFILE is required. Set it in the vars section at the top of build/darwin/Taskfile.yml"
+  build:server:
+    summary: Builds the server version using Docker
+    deps:
+      - task: common:build:frontend
+    cmds:
+      - docker build -f Dockerfile.server -t mrrss-server:latest .
+      - docker create --name mrrss-server-temp mrrss-server:latest
+      - docker cp mrrss-server-temp:/app/mrrss-server {{.BIN_DIR}}/{{.APP_NAME}}-server
+      - docker rm mrrss-server-temp
+    preconditions:
+      - sh: docker info > /dev/null 2>&1
+        msg: "Docker is required for building the server version"
+
+  run:server:
+    summary: Runs the server version
+    deps:
+      - task: build:server
+    cmds:
+      - '{{.BIN_DIR}}/{{.APP_NAME}}-server'

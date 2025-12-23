@@ -34,8 +34,8 @@ func CreateHTTPClient(proxyURL string, timeout time.Duration) (*http.Client, err
 		TLSClientConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12,
 		},
-		MaxIdleConns:        100,
-		MaxIdleConnsPerHost: 10,
+		MaxIdleConns:        50, // Reduced from 100 to prevent connection exhaustion
+		MaxIdleConnsPerHost: 5,  // Reduced from 10 to limit connections per host
 		IdleConnTimeout:     90 * time.Second,
 	}
 

@@ -1,0 +1,51 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+build/
+*.exe
+*.exe~
+mrrss-test
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+debug.log
+
+# Node modules and frontend build artifacts (not needed for server build)
+frontend/node_modules/
+frontend/dist/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Scripts and tools
+scripts/
+Makefile
+
+# CI/CD
+.github/
+
+# Test files
+*_test.go
+frontend/cypress/
+frontend/vitest.config.js
+
+# Development config
+wails_windows_amd64.syso
+# config/defaults.json  # Keep this for frontend build
+
+# Portable mode marker
+portable.txt

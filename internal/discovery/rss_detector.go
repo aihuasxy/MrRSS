@@ -29,10 +29,11 @@ func (s *Service) discoverRSSFeedsWithProgress(ctx context.Context, blogURLs []s
 	foundCount := 0
 	total := len(blogURLs)
 
+OuterLoop:
 	for _, blogURL := range blogURLs {
 		select {
 		case <-ctx.Done():
-			break
+			break OuterLoop
 		default:
 		}
 
