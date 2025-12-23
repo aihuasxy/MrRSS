@@ -11,6 +11,7 @@ import {
   PhArrowCounterClockwise,
   PhChatCircleText,
 } from '@phosphor-icons/vue';
+import AITestSettings from './AITestSettings.vue';
 import type { SettingsData } from '@/types/settings';
 
 const { t } = useI18n();
@@ -175,6 +176,9 @@ onMounted(() => {
         "
       />
     </div>
+
+    <!-- AI Configuration Test -->
+    <AITestSettings />
   </div>
 
   <!-- AI Usage Group -->

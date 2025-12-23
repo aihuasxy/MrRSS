@@ -79,7 +79,11 @@ func HandleOPMLImport(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 // HandleOPMLImportDialog is not available in server mode.
 func HandleOPMLImportDialog(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	log.Printf("File dialog operations are not available in server mode")
-	http.Error(w, "File dialog operations are not available in server mode. Use /api/opml/import endpoint with file upload instead.", http.StatusNotImplemented)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotImplemented)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error": "File dialog operations are not available in server mode. Use /api/opml/import endpoint with file upload instead.",
+	})
 }
 
 // HandleOPMLExport handles OPML export for server mode.
@@ -109,5 +113,9 @@ func HandleOPMLExport(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 // HandleOPMLExportDialog is not available in server mode.
 func HandleOPMLExportDialog(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	log.Printf("File dialog not available in server mode")
-	http.Error(w, "File dialog not available in server mode. Use /api/opml/export endpoint with direct download instead.", http.StatusNotImplemented)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotImplemented)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error": "File dialog not available in server mode. Use /api/opml/export endpoint with direct download instead.",
+	})
 }

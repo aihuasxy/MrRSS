@@ -19,6 +19,12 @@ export function useFeedManagement() {
         method: 'POST',
       });
 
+      if (!response.ok) {
+        // Handle HTTP error responses
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Import failed');
+      }
+
       const result = await response.json();
 
       if (result.status === 'cancelled') {
@@ -51,6 +57,12 @@ export function useFeedManagement() {
       const response = await fetch('/api/opml/export-dialog', {
         method: 'POST',
       });
+
+      if (!response.ok) {
+        // Handle HTTP error responses
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Export failed');
+      }
 
       const result = await response.json();
 

@@ -23,6 +23,7 @@ const {
   closeImageViewer,
   attachImageEventListeners,
   exportToObsidian,
+  handleRetryLoadContent,
   t,
 } = useArticleDetail();
 
@@ -66,7 +67,8 @@ function toggleTranslations() {
       <!-- Original webpage view -->
       <div v-if="!showContent" class="flex-1 bg-white w-full">
         <iframe
-          :src="article.url"
+          :key="article.id"
+          :src="`/api/webpage/proxy?url=${encodeURIComponent(article.url)}`"
           class="w-full h-full border-none"
           sandbox="allow-scripts allow-same-origin allow-popups"
         ></iframe>
@@ -81,6 +83,7 @@ function toggleTranslations() {
         :attach-image-event-listeners="attachImageEventListeners"
         :show-translations="showTranslations"
         :show-content="showContent"
+        @retry-load-content="handleRetryLoadContent"
       />
     </div>
 

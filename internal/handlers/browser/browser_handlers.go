@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/wailsapp/wails/v3/pkg/application"
+
 	handlers "MrRSS/internal/handlers/core"
 	"MrRSS/internal/utils"
 )
@@ -72,16 +74,15 @@ func HandleOpenURL(h *handlers.Handler, w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Open URL using Wails v3 Browser API
-	app, ok := h.App.(interface {
-		Browser() interface{ OpenURL(string) error }
-	})
+	// Note: app.Browser is a field of type *application.BrowserManager
+	wailsApp, ok := h.App.(*application.App)
 	if !ok {
-		log.Printf("Browser integration not available in server mode")
-		http.Error(w, "Browser integration not available in server mode", http.StatusNotImplemented)
+		log.Printf("Browser integration not available - invalid app type")
+		http.Error(w, "Browser integration not available", http.StatusInternalServerError)
 		return
 	}
 
-	err = app.Browser().OpenURL(req.URL)
+	err = wailsApp.Browser.OpenURL(req.URL)
 	if err != nil {
 		log.Printf("Failed to open URL in browser: %v", err)
 		http.Error(w, "Failed to open URL in browser", http.StatusInternalServerError)

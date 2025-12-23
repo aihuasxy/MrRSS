@@ -170,6 +170,13 @@ export function useArticleDetail() {
     }
   }
 
+  // Handle retry loading content
+  function handleRetryLoadContent() {
+    if (article.value && showContent.value) {
+      fetchArticleContent();
+    }
+  }
+
   // Unwrap images from hyperlinks
   // This ensures images can be clicked directly without triggering link navigation
   // Works on both main content and translated content
@@ -557,6 +564,7 @@ export function useArticleDetail() {
     downloadImage,
     exportToObsidian,
     attachImageEventListeners, // Expose for re-attaching after content modifications
+    handleRetryLoadContent,
 
     // Translations
     t,

@@ -5,6 +5,26 @@ All notable changes to MrRSS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.8] - 2025-12-24
+
+### Added
+
+- Supported AI setting tests in settings page to verify connectivity and credentials. (#297)
+- Supported fetching feeds which require JavaScript rendering using headless browser. (#298)
+
+### Changed
+
+- AI generated summaries are now stored in the database to avoid redundant requests and improve performance. (#295)
+- Reduce the frequency of automatic record of window status to improve performance.
+- Improved the conversion from HTML to Markdown when exporting articles to Obsidian. (#299)
+
+### Fixed
+
+- Fixed the issue where docker image failed to access local files due to permission issues. (#296)
+- Fixed the issue where articles failed to open in default browser. (#294)
+- Fixed the issue where importing and exporting OPML files did not work correctly. (#271)
+- Fixed the issue of CSP blocking some external resources.
+
 ## [1.3.7] - 2025-12-23
 
 ### Added
@@ -20,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AI summarization is now triggered manually on default to avoid excessive API usage. Users can enable automatic summarization in settings if desired. (#287)
 - Added Plugin setting tab in settings page and moved FreshRSS synchronization settings there.
 - Improved icons and translations for better user experience.
+- Enhanced the conversion from HTML to Markdown when exporting articles to Obsidian. (#299)
 
 ### Fixed
 

@@ -13,6 +13,8 @@ MrRSS.exe
 mrrss.exe
 mrrss-test
 mrrss-test.exe
+test-build
+test-build.exe
 
 # Test binary, built with `go test -c`
 *.test
@@ -51,6 +53,7 @@ frontend/bindings/
 *.db
 *.db-shm
 *.db-wal
+data/
 
 # vue & vite
 node_modules/

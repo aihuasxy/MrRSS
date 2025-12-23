@@ -75,6 +75,15 @@ export interface NetworkInfo {
   error_message?: string;
 }
 
+export interface AITestInfo {
+  config_valid: boolean;
+  connection_success: boolean;
+  model_available: boolean;
+  response_time_ms: number;
+  test_time: string;
+  error_message?: string;
+}
+
 export interface UpdateInfo {
   has_update: boolean;
   current_version: string;

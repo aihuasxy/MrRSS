@@ -94,7 +94,7 @@ export function useWindowState() {
     if (saveTimeout) {
       clearTimeout(saveTimeout);
     }
-    saveTimeout = setTimeout(saveWindowState, 500);
+    saveTimeout = setTimeout(saveWindowState, 2000); // Increased from 500ms to 2000ms
   }
 
   /**
@@ -118,16 +118,16 @@ export function useWindowState() {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // 3. Periodic check as fallback for position changes
-    // (position changes don't trigger browser events)
-    const checkInterval = setInterval(() => {
+    // 3. Window blur event (fires when window loses focus)
+    const handleBlur = () => {
       debouncedSave();
-    }, 2000); // Check every 2 seconds
+    };
+    window.addEventListener('blur', handleBlur);
 
     return () => {
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(checkInterval);
+      window.removeEventListener('blur', handleBlur);
       if (saveTimeout) {
         clearTimeout(saveTimeout);
       }

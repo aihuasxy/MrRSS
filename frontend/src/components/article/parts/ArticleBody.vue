@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* eslint-disable vue/no-v-html */
-import { PhSpinnerGap, PhArticle } from '@phosphor-icons/vue';
+import { PhSpinnerGap, PhArticle, PhArrowClockwise } from '@phosphor-icons/vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -9,11 +9,18 @@ interface Props {
   articleContent: string;
   isTranslatingContent: boolean;
   hasMediaContent?: boolean; // Whether article has audio/video content
+  isLoadingContent?: boolean; // Whether content is currently loading
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   hasMediaContent: false,
+  isLoadingContent: false,
 });
+
+// Emits
+const emit = defineEmits<{
+  retryLoad: [];
+}>();
 </script>
 
 <template>
@@ -30,9 +37,17 @@ withDefaults(defineProps<Props>(), {
     </div>
   </div>
 
-  <!-- No content available (only show if there's no media content either) -->
+  <!-- No content available with retry option -->
   <div v-else-if="!hasMediaContent" class="text-center text-text-secondary py-6 sm:py-8">
     <PhArticle :size="48" class="mb-2 sm:mb-3 opacity-50 mx-auto sm:w-16 sm:h-16" />
-    <p class="text-sm sm:text-base">{{ t('noContentAvailable') }}</p>
+    <p class="text-sm sm:text-base mb-4">{{ t('noContentAvailable') }}</p>
+    <button
+      v-if="!props.isLoadingContent"
+      class="btn-secondary-compact flex items-center gap-1.5 mx-auto"
+      @click="emit('retryLoad')"
+    >
+      <PhArrowClockwise :size="12" />
+      <span class="text-xs">{{ t('retrySummary') }}</span>
+    </button>
   </div>
 </template>

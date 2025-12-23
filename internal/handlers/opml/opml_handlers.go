@@ -110,39 +110,49 @@ func HandleOPMLExport(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 // HandleOPMLImportDialog opens a file dialog to select OPML file for import.
 func HandleOPMLImportDialog(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	if h.App == nil {
-		log.Printf("File dialog not available in server mode")
-		http.Error(w, "File dialog not available in server mode. Use /api/opml/import endpoint with file upload instead.", http.StatusNotImplemented)
+		log.Printf("File dialog not available")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotImplemented)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "File dialog not available. Use /api/opml/import endpoint with file upload instead.",
+		})
 		return
 	}
 
-	// Open file dialog to select OPML file
-	app, ok := h.App.(interface {
-		Dialog() interface {
-			OpenFileWithOptions(*application.OpenFileDialogOptions) interface{ PromptForSingleSelection() (string, error) }
-		}
-	})
+	// Type assert to *application.App to access Dialog
+	app, ok := h.App.(*application.App)
 	if !ok {
-		log.Printf("File dialog not available in server mode")
-		http.Error(w, "File dialog not available in server mode. Use /api/opml/import endpoint with file upload instead.", http.StatusNotImplemented)
+		log.Printf("File dialog not available: app is not *application.App type")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotImplemented)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "File dialog not available. Use /api/opml/import endpoint with file upload instead.",
+		})
 		return
 	}
 
-	filePath, err := app.Dialog().OpenFileWithOptions(&application.OpenFileDialogOptions{
+	filePath, err := app.Dialog.OpenFileWithOptions(&application.OpenFileDialogOptions{
 		Title: "Select OPML File",
 		Filters: []application.FileFilter{
 			{
-				DisplayName: "OPML Files",
+				DisplayName: "OPML Files (*.opml;*.xml)",
 				Pattern:     "*.opml;*.xml",
 			},
 			{
-				DisplayName: "All Files",
+				DisplayName: "All Files (*)",
 				Pattern:     "*",
 			},
 		},
+		CanChooseFiles:       true,
+		AllowsOtherFileTypes: true,
 	}).PromptForSingleSelection()
 	if err != nil {
 		log.Printf("Error opening file dialog: %v", err)
-		http.Error(w, "Failed to open file dialog", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "Failed to open file dialog",
+		})
 		return
 	}
 
@@ -157,7 +167,11 @@ func HandleOPMLImportDialog(h *core.Handler, w http.ResponseWriter, r *http.Requ
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.Printf("Error opening selected file: %v", err)
-		http.Error(w, "Failed to open selected file", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "Failed to open selected file",
+		})
 		return
 	}
 	defer file.Close()
@@ -166,7 +180,11 @@ func HandleOPMLImportDialog(h *core.Handler, w http.ResponseWriter, r *http.Requ
 	feeds, err := opml.Parse(file)
 	if err != nil {
 		log.Printf("Error parsing OPML: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": err.Error(),
+		})
 		return
 	}
 
@@ -213,58 +231,75 @@ func HandleOPMLImportDialog(h *core.Handler, w http.ResponseWriter, r *http.Requ
 // HandleOPMLExportDialog opens a save dialog to export OPML file.
 func HandleOPMLExportDialog(h *core.Handler, w http.ResponseWriter, r *http.Request) {
 	if h.App == nil {
-		log.Printf("File dialog operations are not available in server mode")
-		http.Error(w, "File dialog operations are not available in server mode. Use the direct export endpoint instead.", http.StatusNotImplemented)
+		log.Printf("File dialog not available")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotImplemented)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "File dialog not available. Use the direct export endpoint instead.",
+		})
 		return
 	}
 
 	// Get feeds data
 	feeds, err := h.DB.GetFeeds()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": err.Error(),
+		})
 		return
 	}
 
 	// Generate OPML content
 	data, err := opml.Generate(feeds)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	// Open save dialog
-	app, ok := h.App.(interface {
-		Dialog() interface {
-			SaveFileWithOptions(*application.SaveFileDialogOptions) interface{ PromptForSingleSelection() (string, error) }
-		}
-	})
+	// Type assert to *application.App to access Dialog
+	app, ok := h.App.(*application.App)
 	if !ok {
-		log.Printf("File dialog not available in server mode")
-		http.Error(w, "File dialog not available in server mode. Use /api/opml/export endpoint with direct download instead.", http.StatusNotImplemented)
+		log.Printf("File dialog not available: app is not *application.App type")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotImplemented)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "File dialog not available. Use /api/opml/export endpoint with direct download instead.",
+		})
 		return
 	}
 
-	filePath, err := app.Dialog().SaveFileWithOptions(&application.SaveFileDialogOptions{
+	filePath, err := app.Dialog.SaveFileWithOptions(&application.SaveFileDialogOptions{
 		Title:    "Save OPML File",
 		Filename: "subscriptions.opml",
 		Filters: []application.FileFilter{
 			{
-				DisplayName: "OPML Files",
+				DisplayName: "OPML Files (*.opml)",
 				Pattern:     "*.opml",
 			},
 			{
-				DisplayName: "XML Files",
+				DisplayName: "XML Files (*.xml)",
 				Pattern:     "*.xml",
 			},
 			{
-				DisplayName: "All Files",
+				DisplayName: "All Files (*)",
 				Pattern:     "*",
 			},
 		},
+		AllowOtherFileTypes: true,
 	}).PromptForSingleSelection()
 	if err != nil {
 		log.Printf("Error opening save dialog: %v", err)
-		http.Error(w, "Failed to open save dialog", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "Failed to open save dialog",
+		})
 		return
 	}
 
@@ -279,7 +314,11 @@ func HandleOPMLExportDialog(h *core.Handler, w http.ResponseWriter, r *http.Requ
 	err = os.WriteFile(filePath, data, 0644)
 	if err != nil {
 		log.Printf("Error writing OPML file: %v", err)
-		http.Error(w, "Failed to write OPML file", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "Failed to write OPML file",
+		})
 		return
 	}
 
