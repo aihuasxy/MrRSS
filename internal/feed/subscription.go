@@ -237,8 +237,21 @@ func (f *Fetcher) parseFeedWithFeedInternal(ctx context.Context, feed *models.Fe
 	}
 
 	// Try standard parsing first
-	utils.DebugLog("parseFeedWithFeedInternal: Attempting standard RSS parsing for %s", feed.URL)
-	parsedFeed, err := f.fp.ParseURLWithContext(feed.URL, fetchCtx)
+	// Get HTTP client with proxy support based on feed settings
+	// This ensures proxy settings (feed-level or global) are respected
+	var parsedFeed *gofeed.Feed
+	httpClient, err := f.getHTTPClient(*feed)
+	if err != nil {
+		utils.DebugLog("parseFeedWithFeedInternal: Failed to create HTTP client with proxy: %v, using default parser", err)
+		// Fallback to default parser if proxy setup fails
+		parsedFeed, err = f.fp.ParseURLWithContext(feed.URL, fetchCtx)
+	} else {
+		// Create a parser with the proxy-enabled client
+		parser := gofeed.NewParser()
+		parser.Client = httpClient
+		utils.DebugLog("parseFeedWithFeedInternal: Attempting standard RSS parsing for %s (with proxy support if configured)", feed.URL)
+		parsedFeed, err = parser.ParseURLWithContext(feed.URL, fetchCtx)
+	}
 	if err != nil {
 		utils.DebugLog("parseFeedWithFeedInternal: Standard RSS parsing failed: %v", err)
 
