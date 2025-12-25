@@ -127,18 +127,19 @@ func (f *Fetcher) getConcurrencyLimit(feedCount int) int {
 
 // getHTTPClient returns an HTTP client configured with proxy if needed
 // Proxy precedence (highest to lowest):
-// 1. Feed custom proxy (ProxyEnabled=true, ProxyURL != "")
-// 2. Global proxy (ProxyEnabled=true, ProxyURL == "", global proxy_enabled=true)
-// 3. No proxy (ProxyEnabled=false or no global proxy)
+// 1. Feed custom proxy (ProxyEnabled=true, ProxyURL != "") - highest priority
+// 2. Global proxy (global proxy_enabled=true) - automatically applied to all feeds
+// 3. No proxy (global proxy not enabled and feed has no custom proxy)
 func (f *Fetcher) getHTTPClient(feed models.Feed) (*http.Client, error) {
 	var proxyURL string
 
-	// Check feed-level proxy settings
+	// Priority 1: Check feed-level custom proxy settings (highest priority)
 	if feed.ProxyEnabled && feed.ProxyURL != "" {
-		// Feed has custom proxy configured - highest priority
+		// Feed has custom proxy configured - use it directly
 		proxyURL = feed.ProxyURL
-	} else if feed.ProxyEnabled {
-		// Feed requests to use global proxy
+	} else {
+		// Priority 2: Check global proxy settings
+		// If global proxy is enabled, automatically apply it to all feeds
 		proxyEnabled, _ := f.db.GetSetting("proxy_enabled")
 		if proxyEnabled == "true" {
 			// Build global proxy URL from settings (use encrypted methods for credentials)
@@ -149,8 +150,8 @@ func (f *Fetcher) getHTTPClient(feed models.Feed) (*http.Client, error) {
 			proxyPassword, _ := f.db.GetEncryptedSetting("proxy_password")
 			proxyURL = BuildProxyURL(proxyType, proxyHost, proxyPort, proxyUsername, proxyPassword)
 		}
+		// If global proxy is not enabled, proxyURL remains empty (no proxy)
 	}
-	// If ProxyEnabled=false, proxyURL remains empty (no proxy)
 
 	// Create HTTP client with or without proxy
 	return CreateHTTPClient(proxyURL)

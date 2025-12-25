@@ -110,15 +110,32 @@ func TestGetHTTPClientProxyPrecedence(t *testing.T) {
 		t.Fatalf("unexpected global proxy url: %v", pu2)
 	}
 
+	// Test 3: Global proxy automatically applied to all feeds (even when ProxyEnabled=false)
 	feed3 := models.Feed{ProxyEnabled: false}
 	client3, err := f.getHTTPClient(feed3)
 	if err != nil {
 		t.Fatalf("getHTTPClient error: %v", err)
 	}
 	tr3 := client3.Transport.(*http.Transport)
-	if tr3.Proxy != nil {
-		if pu3, _ := tr3.Proxy(&http.Request{URL: &url.URL{Scheme: "http", Host: "example.com"}}); pu3 != nil {
-			t.Fatalf("expected no proxy when disabled, got %v", pu3)
+	if tr3.Proxy == nil {
+		t.Fatalf("expected proxy function for global proxy (auto-applied to all feeds)")
+	}
+	pu3, _ := tr3.Proxy(&http.Request{URL: &url.URL{Scheme: "http", Host: "example.com"}})
+	if pu3 == nil || pu3.Host == "" {
+		t.Fatalf("expected global proxy to be auto-applied, got %v", pu3)
+	}
+
+	// Test 4: No proxy when global proxy is disabled
+	db.SetSetting("proxy_enabled", "false")
+	feed4 := models.Feed{ProxyEnabled: false}
+	client4, err := f.getHTTPClient(feed4)
+	if err != nil {
+		t.Fatalf("getHTTPClient error: %v", err)
+	}
+	tr4 := client4.Transport.(*http.Transport)
+	if tr4.Proxy != nil {
+		if pu4, _ := tr4.Proxy(&http.Request{URL: &url.URL{Scheme: "http", Host: "example.com"}}); pu4 != nil {
+			t.Fatalf("expected no proxy when global proxy disabled, got %v", pu4)
 		}
 	}
 }
